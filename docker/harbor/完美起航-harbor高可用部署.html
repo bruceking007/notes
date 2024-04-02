@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<!-- saved from url=(0044)http://dreamphp.cn/blog/detail?blog_id=29433 -->
+<html lang="zh"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,Chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="renderer" content="webkit">
+
+    <meta name="keywords" content="okgoes,Okgoes,博客,社区,完美起航,完美启航,新闻资讯">
+    <meta name="description" content="harbor高可用简介harbor目前有两种主流的高可用方案：双主复制，harbor自带的镜像复制功能多harbor实例共享后端存储双主复制架构在遇到大镜像时有同步延迟，并且一个实例故障后需要手动重新开启复制策略才能再次同步，下面以阿里云环境为例，使用两台ECS实例+NFS后端共享存储方式部署高可用harbor，整体架构图如下：该方案需要注意以下几点：共享存储的选取，Harbor的后端存储目前支持本地文件系统、NFS、CephFS、azure、gcs、AWSs3,、swift以及阿里云oss。S">
+    <meta name="okgoes:blog" content="3.5.0">
+
+    <link rel="icon" href="http://dreamphp.cn/favicon.ico" type="image/x-icon">
+    <title>完美起航-harbor高可用部署</title>
+    <link rel="stylesheet" href="./完美起航-harbor高可用部署_files/bootstrap.min.css" crossorigin="anonymous">
+    <link rel="stylesheet" href="./完美起航-harbor高可用部署_files/bootstrap-datepicker.min.css">
+    <link rel="stylesheet" href="./完美起航-harbor高可用部署_files/bootstrap-datetimepicker.min.css">
+    <link rel="stylesheet" href="./完美起航-harbor高可用部署_files/carousel.css">
+    <link rel="stylesheet" href="./完美起航-harbor高可用部署_files/style.css">
+    <script src="./完美起航-harbor高可用部署_files/hm.js.下载"></script><script src="./完美起航-harbor高可用部署_files/jquery-1.12.4.min.js.下载" crossorigin="anonymous"></script>
+    <!--[if lt IE 9]>
+      <script src="/js/3.7.3/html5shiv.min.js"></script>
+      <script src="/js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  <style>
+      
+  </style><style type="text/css">.container___1G6iy{
+  padding: 23px 25px 16px 25px;
+  position: relative;
+}
+
+.header___1be6_ {
+  display: flex;
+  flex-direction: row;
+}
+
+.header-logo___2TcKo {
+  width: 22px;
+  height: 22px;
+}
+
+.header-text___1KJcQ {
+  font-family: PingFangSC-Regular;
+  font-size: 14px;
+  color: #666666;
+  margin-left: 15px;
+}
+
+.header-close___26zjl {
+  width: 10px;
+  height: 10px;
+  position: absolute;
+  right: 25px;
+  top: 15px;
+  cursor: pointer;
+}
+
+.footer___1eS4t{
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+}
+
+.close___2gKnC{
+  font-family: PingFangSC-Regular;
+  font-size: 14px;
+  text-align: center;
+  color: #666666;
+  width: 67px;
+  height: 33px;
+  line-height: 33px;
+  border: 1px solid #E5E5E5;
+  border-radius: 3px;
+  margin-right: 16px;
+  cursor: pointer;
+}
+
+.ok___GLX-t{
+  background: #27ACFF;
+  border-radius: 3px;
+  font-family: PingFangSC-Regular;
+  font-size: 14px;
+  color: #FFFFFF;
+  text-align: center;
+  width: 67px;
+  height: 33px;
+  line-height: 33px;
+  border: 1px solid #27ACFF;
+  cursor: pointer;
+}
+
+.content___3OaaO{
+  margin-top: 27px;
+}
+
+.transport-card___3mzRg {
+  display: flex;
+  flex-direction: row;
+  background: #E5E5E5;
+}
+
+.transport-card-no-cover___1G7Nb{
+  border-radius: 3px;
+}
+
+.transport-card-cover___3mV2O {
+  border-top-left-radius: 3px;
+  border-top-right-radius: 3px;
+}
+
+.right___3Y5Y5 {
+  width: 250px;
+  padding-left: 16px;
+  padding-right: 10px;
+  display: flex;
+  flex-direction: row;
+}
+
+.edit-button___1WuI- {
+  width: 68px;
+  background: #fff;
+  margin-top: 1px;
+  margin-bottom: 1px;
+  margin-right: 1px;
+  font-family: PingFangSC-Regular;
+  font-size: 14px;
+  color: #27ACFF;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+.transport-content___OSsgj{
+  width: 200px;
+  display: flex;
+  flex-direction: column;
+}
+
+.transport-url___1hhN2 {
+  padding: 0px !important;
+  margin: 0px !important;
+  font-family: PingFangSC-Regular;
+  font-size: 14px;
+  color: #999999;
+  letter-spacing: 0.26px;
+  text-align: justify;
+  margin-bottom: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 10px !important;
+}
+
+.transport-username___1j9yc {
+  padding: 0px !important;
+  margin: 0px !important;
+  font-family: PingFangSC-Medium;
+  font-size: 12px;
+  color: #333333;
+  letter-spacing: 0.22px;
+  text-align: justify;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cover___3vZ0z {
+  border-style: solid;
+  height: 38px;
+  border-color: #e5e5e5;
+  border-left-width: 1px;
+  border-top: 0px;
+  border-right-width: 1px;
+  border-bottom-width: 1px;
+  border-bottom-left-radius: 3px;
+  border-bottom-right-radius: 3px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.cover___3vZ0z span{
+  margin-left: 16px;
+  font-family: PingFangSC-Regular;
+  font-size: 14px;
+  color: #FF3B30;
+}
+
+.edit-container___3Bu5Q {
+  padding: 10px;
+}
+
+.edit-box___1ibzg {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.edit-text___2ip5t {
+  font-size: 14px;
+  color: #666666;
+  margin-right: 5px;
+  width: 110px;
+  text-align: right;
+}
+</style></head>
+  
+<body style="padding-top: 52px; max-width: 1170px; margin: 0 auto;  /*background:url(&#39;data:image/gif;base64,R0lGODlhBwAGAKIAAAAAAP///8nJycjIyLm5ubi4uP///wAAACH5BAEAAAYALAAAAAAHAAYAAAMQOCOiTaREVmpU0C6pR8xDAgA7&#39;) repeat;*/">
+    <header>
+	<nav class="navbar navbar-default navbar-fixed-top">
+		<div class="container-fluid">
+			<!-- Brand and toggle get grouped for better mobile display -->
+			<div class="navbar-header" style="padding: 10px 0px 0px 10px">
+			  <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			  </button>
+			  <div class="okgoes-logo">
+				  <a class="navbar-brand" href="http://dreamphp.cn/">&nbsp;</a>
+			 </div>
+			</div>
+			<!-- Collect the nav links, forms, and other content for toggling -->
+			<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			  <ul class="nav navbar-nav">
+				<li class=""><a href="http://dreamphp.cn/news/index">资讯</a></li>
+				<li class=""><a href="http://dreamphp.cn/blog/index">博客<span class="sr-only">(current)</span></a></li>
+				<li class=""><a href="http://dreamphp.cn/community/index">社区</a></li>
+				<!-- <li class=""><a href="#">下载</a></li> -->
+				<li class="dropdown ">
+				  <a href="http://dreamphp.cn/blog/detail?blog_id=29433#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">资源素材<span class="caret"></span></a>
+				  <ul class="dropdown-menu">
+					<li class=""><a href="http://dreamphp.cn/modules/index">网页模板</a></li>
+					<li class=""><a href="http://dreamphp.cn/blog/detail?blog_id=29433#">源代码</a></li>
+					<li class=""><a href="http://dreamphp.cn/blog/detail?blog_id=29433#">网页设计</a></li>
+					<li role="separator" class="divider"></li>
+					<li class=""><a href="http://dreamphp.cn/blog/detail?blog_id=29433#">工具软件</a></li>
+					<li role="separator" class="divider"></li>
+					<li class=""><a href="http://dreamphp.cn/blog/detail?blog_id=29433#">软件定制</a></li>
+				  </ul>
+				</li>
+			  </ul>
+			  <form class="navbar-form navbar-left">
+				<div class="form-group">
+				  <input type="text" class="form-control" placeholder="请输入搜索的内容">
+				</div>
+				<button type="submit" class="btn btn-default">搜索</button>
+			  </form>
+			  <ul class="nav navbar-nav navbar-right">
+				
+                <li><a href="http://dreamphp.cn/login">登录</a></li>
+				<li><a href="http://dreamphp.cn/user/register">注册</a></li>
+				
+				<!-- <li class="dropdown">
+				  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Dropdown <span class="caret"></span></a>
+				  <ul class="dropdown-menu">
+					<li><a href="#">Action</a></li>
+					<li><a href="#">Another action</a></li>
+					<li><a href="#">Something else here</a></li>
+					<li role="separator" class="divider"></li>
+					<li><a href="#">Separated link</a></li>
+				  </ul>
+				</li> -->
+			  </ul>
+			</div><!-- /.navbar-collapse -->
+		  </div><!-- /.container-fluid -->
+	</nav>
+</header>
+<link rel="stylesheet" type="text/css" href="./完美起航-harbor高可用部署_files/markdown.css">
+<link rel="stylesheet" type="text/css" href="./完美起航-harbor高可用部署_files/ck_htmledit_views.css">
+<main>
+	<div class="container-fluid">
+		<div class="row">
+			<div style="padding-left: 1px;" class="col-lg-9 col-md-9 col-sm-12 col-xs-12">
+				<div style="border: none; background: white;" class="panel panel-default okgoes-communtiy-margin">
+                    <div style="padding: 0 0" class="panel-body">
+                        <div style="padding: 20px 20px;">
+                            <p style="text-align: center; font-size: 20px; font-weight: 600; word-break: break-all;">
+                                harbor高可用部署
+                            </p>
+                            <p style="text-align: center; border-bottom: 1px solid rgba(0 ,0 ,0, 0.8); padding: 15px 10px">
+                                <span style="color: sandybrown;" class="glyphicon glyphicon-record"></span>
+                                <span style="color: sandybrown;">&nbsp;架构&nbsp;</span>
+                                <span class="glyphicon glyphicon-user"></span>
+                                <span>&nbsp;完美起航&nbsp;</span>
+                                <span class="glyphicon glyphicon-time"></span>
+                                <span>&nbsp;2021-08-16 23:50&nbsp;</span>
+                                <span class="glyphicon glyphicon-eye-open"></span>
+                                <span style="margin-left: 0px;" class="okgoes-list-tab">&nbsp;470</span>
+                            </p>
+                            <div class="okgoes-blog-content">
+                                
+                                
+                                
+                                
+                                
+                                
+        <div id="article_content" class="article_content clearfix">
+        
+                <div id="content_views" class="markdown_views prism-tomorrow-night">
+                    <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+                        <path stroke-linecap="round" d="M5,0 0,2.5 5,5z" id="raphael-marker-block" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></path>
+                    </svg>
+                    <h2><a id="harbor_0"></a>harbor高可用简介</h2> 
+<p>harbor目前有两种主流的高可用方案：</p> 
+<ul><li>双主复制，harbor自带的镜像复制功能</li><li>多harbor实例共享后端存储</li></ul> 
+<p><img src="./完美起航-harbor高可用部署_files/ba7f2ffba8634e1bad80031fb4cb2e6d.png" alt="在这里插入图片描述"><br> 双主复制架构在遇到大镜像时有同步延迟，并且一个实例故障后需要手动重新开启复制策略才能再次同步，下面以阿里云环境为例，使用两台ECS实例+NFS后端共享存储方式部署高可用harbor，整体架构图如下：<br> <img src="./完美起航-harbor高可用部署_files/4f1a32a53f2046549d11e812ed87489f.png" alt="在这里插入图片描述"><br> 该方案需要注意以下几点：</p> 
+<ol><li>共享存储的选取，Harbor的后端存储目前支持本地文件系统、NFS、CephFS、azure、gcs、AWS s3,、swift 以及阿里云oss。</li><li>Session在不同的实例上共享，在最新的harbor中，默认session会存放在redis中，只需要将redis独立出来即可，可以通过<code>redis sentinel</code>或者<code>redis cluster</code>等方式来保证redis的可用性。</li><li>由于PostgreSQL多个实例无法共享一份数据文件，需要将harbor中的数据库拆出来独立部署，让多实例共用一个外部数据库，并将Harbor中默认创建在PostgreSQL的所有表的结构、初始数据等导入进单独部署的PostgreSQL服务中，PostgreSQL数据的冗余可以使用PostgreSQL的同步策略来实现。</li></ol> 
+<h2><a id="harbor_15"></a>harbor高可用部署</h2> 
+<p>在阿里云申请以下资源：</p> 
+<table><thead><tr><th>资源类型</th><th>数量</th><th>地域</th></tr></thead><tbody><tr><td>ECS实例</td><td>2</td><td>华南1(深圳)-可用区D</td></tr><tr><td>NAS实例</td><td>1</td><td>华南1(深圳)-可用区D</td></tr><tr><td>RDS实例</td><td>1</td><td>华南1(深圳)-可用区D</td></tr><tr><td>Redis实例</td><td>1</td><td>华南1(深圳)-可用区D</td></tr><tr><td>SLB实例</td><td>1</td><td>华南1(深圳)-可用区D</td></tr></tbody></table>
+<p>两台ECS实例信息:</p> 
+<table><thead><tr><th>ECS主机名</th><th>私网IP</th><th>公网IP</th><th>OS</th><th>地域</th></tr></thead><tbody><tr><td>harbor001</td><td>172.18.8.242</td><td>120.79.96.163</td><td>CentOS8.4</td><td>华南1(深圳)-可用区D</td></tr><tr><td>harbor002</td><td>172.18.8.243</td><td>120.79.96.169</td><td>CentOS8.4</td><td>华南1(深圳)-可用区D</td></tr></tbody></table>
+<p>备注：如果在私有云环境部署，可自建PostgreSQL集群、Redis集群、NFS server，并使用<code>nginx/haproxy/lvs+keepalived</code>代替公网SLB负载均衡，如果使用对象存储作为后端，可选用minio代替s3。</p> 
+<h3><a id="SLB_36"></a>配置SLB实例</h3> 
+<p>创建1个SLB实例(代替上图nginx)及两组监听，用于四层转发，访问443端口转发到后端两台harbor ECS实例的443端口，访问80端口harbor默认会重定向到443端口，未启动后端harbor时当前监听应该处于异常状态：<br> <img src="./完美起航-harbor高可用部署_files/81e48626b3b64acdac65aeeaf34e6752.png" alt="在这里插入图片描述"><br> 自行准备域名，解析到SLB实例的公网IP：</p> 
+<pre><code class="prism language-shell">registry.cloudcele.com ---<span class="token operator">&gt;</span>  <span class="token number">120.25</span>.165.246
+</code></pre> 
+<p>以阿里云域名为例：<br> <img src="./完美起航-harbor高可用部署_files/d94a3df8653a47a2b199f98d063ea3e7.png" alt="在这里插入图片描述"></p> 
+<h3><a id="RDS_46"></a>配置RDS实例</h3> 
+<p>创建PostgreSQL类型RDS实例，创建一个数据库用户，以超级管理员<code>postgres</code>为例：<br> <img src="./完美起航-harbor高可用部署_files/c1f819fc6a714d4db0c92313f211e4f0.png" alt="在这里插入图片描述"><br> 然后手动创建三个空数据库，绑定到postgres用户下：</p> 
+<p>参考：<a href="https://goharbor.io/docs/master/install-config/harbor-ha-helm">https://goharbor.io/docs/master/install-config/harbor-ha-helm</a></p> 
+<pre><code class="prism language-shell">notaryserver
+notarysigner
+registry
+</code></pre> 
+<p>阿里云示例：<br> <img src="./完美起航-harbor高可用部署_files/15435b0ec964414db4c7c214ce96ca6c.png" alt="在这里插入图片描述"></p> 
+<h3><a id="NAS_62"></a>配置NAS实例</h3> 
+<p>创建NAS实例后，在两台ECS实例上都执行挂载，安装NFS客户端：</p> 
+<pre><code class="prism language-shell"><span class="token function">sudo</span> yum <span class="token function">install</span> nfs-utils
+</code></pre> 
+<p>执行以下命令，提高同时发起的NFS请求数量：</p> 
+<pre><code class="prism language-shell"><span class="token function">sudo</span> <span class="token builtin class-name">echo</span> <span class="token string">"options sunrpc tcp_slot_table_entries=128"</span> <span class="token operator">&gt;&gt;</span> /etc/modprobe.d/sunrpc.conf
+<span class="token function">sudo</span> <span class="token builtin class-name">echo</span> <span class="token string">"options sunrpc tcp_max_slot_table_entries=128"</span> <span class="token operator">&gt;&gt;</span> /etc/modprobe.d/sunrpc.conf
+</code></pre> 
+<p>挂载NFS文件系统，这里挂载到<code>/data</code>目录下</p> 
+<pre><code class="prism language-shell"><span class="token function">cat</span> <span class="token operator">&gt;&gt;</span> /etc/fstab <span class="token operator">&lt;&lt;</span><span class="token string">EOF
+217d3488b8-mtr10.cn-shenzhen.nas.aliyuncs.com:/ /data nfs vers=4,minorversion=0,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,_netdev,noresvport 0 0
+EOF</span>
+
+<span class="token function">mkdir</span> /data
+<span class="token function">mount</span> -a
+</code></pre> 
+<p>验证挂载是否成功</p> 
+<pre><code class="prism language-shell"><span class="token punctuation">[</span>root@harbor001 ~<span class="token punctuation">]</span><span class="token comment"># df -h | grep aliyun</span>
+217d3488b8-mtr10.cn-shenzhen.nas.aliyuncs.com:/   10P     <span class="token number">0</span>   10P   <span class="token number">0</span>% /data
+</code></pre> 
+<h3><a id="_91"></a>生成域名证书</h3> 
+<p>参考：</p> 
+<p><a href="https://github.com/acmesh-official/acme.sh">https://github.com/acmesh-official/acme.sh</a><br> <a href="https://goharbor.io/docs/2.3.0/install-config/configure-https/">https://goharbor.io/docs/2.3.0/install-config/configure-https/</a></p> 
+<p>域名证书可以手动自签证书，但自签发的证书不会被 Chrome 等浏览器信任，这里采用 Let’s Encrypt 生成免费的、可被浏览器信任的证书，常用的 Let’s Encrypt 生成工具主要有 acme.sh 及 certbot 两种，本次使用 acme.sh 自动从 letsencrypt 生成证书。</p> 
+<p>使用<code>acme.sh</code>时有<code>http</code>及<code>dns</code>两种验证方式，dns验证又分为手动和自动，这里使用阿里云域名解析，支持使用dns方式自动连接到阿里云API申请证书：</p> 
+<pre><code class="prism language-shell"><span class="token function">curl</span> https://get.acme.sh <span class="token operator">|</span> <span class="token function">sh</span>
+yum <span class="token function">install</span> -y socat
+
+<span class="token builtin class-name">export</span> <span class="token assign-left variable">Ali_Key</span><span class="token operator">=</span>xxxxxxxxxxxxxxx
+<span class="token builtin class-name">export</span> <span class="token assign-left variable">Ali_Secret</span><span class="token operator">=</span>xxxxxxxxxxxxxxx
+acme.sh --issue --dns dns_ali -d registry.cloudcele.com
+</code></pre> 
+<p>查看生成的证书</p> 
+<pre><code class="prism language-shell"><span class="token comment"># ls -1 /root/.acme.sh/registry.cloudcele.com/</span>
+ca.cer
+fullchain.cer
+registry.cloudcele.com.cer
+registry.cloudcele.com.conf
+registry.cloudcele.com.csr
+registry.cloudcele.com.csr.conf
+registry.cloudcele.com.key
+</code></pre> 
+<p>安装证书到harbor目录下</p> 
+<pre><code class="prism language-shell"><span class="token function">mkdir</span> -p /data/harbor/cert
+
+acme.sh --installcert -d registry.cloudcele.com <span class="token punctuation">\</span>
+  --key-file /data/harbor/cert/registry.cloudcele.com.key <span class="token punctuation">\</span>
+  --fullchain-file /data/harbor/cert/registry.cloudcele.com.crt
+</code></pre> 
+<p>查看安装到harbor路径下的证书</p> 
+<pre><code class="prism language-shell"><span class="token punctuation">[</span>root@harbor001 ~<span class="token punctuation">]</span><span class="token comment"># ls -1 /data/harbor/cert/</span>
+registry.cloudcele.com.crt
+registry.cloudcele.com.key
+</code></pre> 
+<p>acme.sh申请的证书有效期90天，acme.sh安装的时候已经自动添加了一个计划任务每天自动更新证书，更新后重启使用证书的服务。 acme.sh自动添加的计划任务</p> 
+<pre><code class="prism language-shell"><span class="token punctuation">[</span>root@harbor001 ~<span class="token punctuation">]</span><span class="token comment"># crontab  -l | grep acme</span>
+<span class="token number">55</span> <span class="token number">0</span> * * * <span class="token string">"/root/.acme.sh"</span>/acme.sh --cron --home <span class="token string">"/root/.acme.sh"</span> <span class="token operator">&gt;</span> /dev/null
+</code></pre> 
+<p>该计划任务也会自动执行证书上一次的安装命令，为确保nginx使用最新的证书，重新执行一次安装证书命令让acme.ch将证书文件安装到正确的位置及重启nginx服务。</p> 
+<pre><code class="prism language-shell">acme.sh --installcert -d registry.cloudcele.com <span class="token punctuation">\</span>
+  --key-file /data/harbor/cert/registry.cloudcele.com.key <span class="token punctuation">\</span>
+  --fullchain-file /data/harbor/cert/registry.cloudcele.com.crt <span class="token punctuation">\</span>
+  --reloadcmd <span class="token string">"docker restart nginx"</span>
+</code></pre> 
+<h3><a id="harbor_154"></a>开始安装harbor</h3> 
+<p>前提：两台ECS实例已完成docker及docker-compose安装，以下所有操作在第一个harbor节点执行：</p> 
+<p>下载harbor</p> 
+<pre><code class="prism language-shell"><span class="token function">wget</span> https://mirrors.tuna.tsinghua.edu.cn/github-release/goharbor/harbor/v2.3.1/harbor-offline-installer-v2.3.1.tgz
+<span class="token function">tar</span> -zxvf harbor-offline-installer-v2.3.1.tgz -C /opt --strip<span class="token operator">=</span><span class="token number">1</span>
+</code></pre> 
+<p>切换到harbor安装目录</p> 
+<pre><code class="prism language-shell"><span class="token builtin class-name">cd</span> /opt/harbor
+<span class="token function">cp</span> harbor.yml.tmpl harbor.yml
+</code></pre> 
+<p>修改harbor配置文件，注意获取VPC实例内网连接地址、端口及密码信息，有变动的内容如下：</p> 
+<pre><code class="prism language-yaml"><span class="token punctuation">[</span>root@harbor001 harbor<span class="token punctuation">]</span><span class="token comment"># vim harbor.yml</span>
+<span class="token key atrule">hostname</span><span class="token punctuation">:</span> registry.cloudcele.com
+
+<span class="token key atrule">http</span><span class="token punctuation">:</span>
+  <span class="token key atrule">port</span><span class="token punctuation">:</span> <span class="token number">80</span>
+  
+<span class="token key atrule">https</span><span class="token punctuation">:</span>
+  <span class="token key atrule">port</span><span class="token punctuation">:</span> <span class="token number">443</span>
+  <span class="token key atrule">certificate</span><span class="token punctuation">:</span> /data/harbor/cert/registry.cloudcele.com.crt
+  <span class="token key atrule">private_key</span><span class="token punctuation">:</span> /data/harbor/cert/registry.cloudcele.com.key
+  
+<span class="token key atrule">data_volume</span><span class="token punctuation">:</span> /data/harbor
+
+<span class="token key atrule">external_database</span><span class="token punctuation">:</span>
+  <span class="token key atrule">harbor</span><span class="token punctuation">:</span>
+    <span class="token key atrule">host</span><span class="token punctuation">:</span> pgm<span class="token punctuation">-</span>wz9541r7evq0auo6168200.pg.rds.aliyuncs.com
+    <span class="token key atrule">port</span><span class="token punctuation">:</span> <span class="token number">1921</span>
+    <span class="token key atrule">db_name</span><span class="token punctuation">:</span> registry
+    <span class="token key atrule">username</span><span class="token punctuation">:</span> postgres
+    <span class="token key atrule">password</span><span class="token punctuation">:</span> Postgres@2021
+    <span class="token key atrule">ssl_mode</span><span class="token punctuation">:</span> disable
+    <span class="token key atrule">max_idle_conns</span><span class="token punctuation">:</span> <span class="token number">2</span>
+    <span class="token key atrule">max_open_conns</span><span class="token punctuation">:</span> <span class="token number">0</span>
+  <span class="token key atrule">notary_signer</span><span class="token punctuation">:</span>
+    <span class="token key atrule">host</span><span class="token punctuation">:</span> pgm<span class="token punctuation">-</span>wz9541r7evq0auo6168200.pg.rds.aliyuncs.com
+    <span class="token key atrule">port</span><span class="token punctuation">:</span> <span class="token number">1921</span>
+    <span class="token key atrule">db_name</span><span class="token punctuation">:</span> notarysigner
+    <span class="token key atrule">username</span><span class="token punctuation">:</span> postgres
+    <span class="token key atrule">password</span><span class="token punctuation">:</span> Postgres@2021
+    <span class="token key atrule">ssl_mode</span><span class="token punctuation">:</span> disable
+  <span class="token key atrule">notary_server</span><span class="token punctuation">:</span>
+    <span class="token key atrule">host</span><span class="token punctuation">:</span> pgm<span class="token punctuation">-</span>wz9541r7evq0auo6168200.pg.rds.aliyuncs.com
+    <span class="token key atrule">port</span><span class="token punctuation">:</span> <span class="token number">1921</span>
+    <span class="token key atrule">db_name</span><span class="token punctuation">:</span> notaryserver
+    <span class="token key atrule">username</span><span class="token punctuation">:</span> postgres
+    <span class="token key atrule">password</span><span class="token punctuation">:</span> Postgres@2021
+    <span class="token key atrule">ssl_mode</span><span class="token punctuation">:</span> disable
+
+<span class="token key atrule">external_redis</span><span class="token punctuation">:</span>
+  <span class="token key atrule">host</span><span class="token punctuation">:</span> r<span class="token punctuation">-</span>wz9fpfgjon0p4kci80.redis.rds.aliyuncs.com<span class="token punctuation">:</span><span class="token number">6379</span>
+  <span class="token key atrule">password</span><span class="token punctuation">:</span> Redis123
+  <span class="token key atrule">registry_db_index</span><span class="token punctuation">:</span> <span class="token number">1</span>
+  <span class="token key atrule">jobservice_db_index</span><span class="token punctuation">:</span> <span class="token number">2</span>
+  <span class="token key atrule">chartmuseum_db_index</span><span class="token punctuation">:</span> <span class="token number">3</span>
+  <span class="token key atrule">trivy_db_index</span><span class="token punctuation">:</span> <span class="token number">5</span>
+  <span class="token key atrule">idle_timeout_seconds</span><span class="token punctuation">:</span> <span class="token number">30</span>
+</code></pre> 
+<p>执行harbor安装</p> 
+<pre><code class="prism language-shell">./install.sh
+</code></pre> 
+<p>复制harbor安装目录到<code>harbor002</code>节点：</p> 
+<pre><code class="prism language-shell"><span class="token punctuation">[</span>root@harbor001 ~<span class="token punctuation">]</span><span class="token comment"># scp -r /opt/harbor/ 172.18.8.243:/opt</span>
+</code></pre> 
+<p>同样，连接到<code>harbor002</code>节点直接安装即可，无需其他操作：</p> 
+<pre><code class="prism language-shell"><span class="token punctuation">[</span>root@harbor002 ~<span class="token punctuation">]</span><span class="token comment"># cd /opt/harbor/</span>
+<span class="token punctuation">[</span>root@harbor002 ~<span class="token punctuation">]</span><span class="token comment"># ./install.sh</span>
+</code></pre> 
+<h3><a id="harbor_239"></a>访问harbor验证</h3> 
+<p>浏览器访问harbor域名：<code>https://registry.cloudcele.com</code><br> <img src="./完美起航-harbor高可用部署_files/4525ee1d7a5e41dfb7d90e0f081cb7cb.png" alt="在这里插入图片描述"><br> 停掉第一个节点harbor实例，验证依然能够正常访问：</p> 
+<pre><code class="prism language-shell"><span class="token punctuation">[</span>root@harbor001 ~<span class="token punctuation">]</span><span class="token comment"># cd /opt/harbor/</span>
+<span class="token punctuation">[</span>root@harbor001 harbor<span class="token punctuation">]</span><span class="token comment"># docker-compose down</span>
+</code></pre> 
+<h3><a id="harbor_247"></a>harbor上传镜像</h3> 
+<p>首先为docker客户端准备证书，从<code>acme.sh</code>目录下获取证书</p> 
+<pre><code class="prism language-shell"><span class="token punctuation">[</span>root@harbor001 ~<span class="token punctuation">]</span><span class="token comment"># cd /root/.acme.sh/registry.cloudcele.com/</span>
+</code></pre> 
+<p>复制以下三个文件到docker客户端目录<code>/etc/docker/certs.d/registry.cloudcele.com/</code>下</p> 
+<pre><code class="prism language-shell">ca.cer
+registry.cloudcele.com.cer
+registry.cloudcele.com.key
+</code></pre> 
+<p>客户端创建目录，查看复制过来的证书文件：</p> 
+<pre><code class="prism language-shell"><span class="token comment"># mkdir -p /etc/docker/certs.d/registry.cloudcele.com/</span>
+
+<span class="token comment"># ls -1 /etc/docker/certs.d/registry.cloudcele.com/</span>
+ca.crt
+registry.cloudcele.com.cert
+registry.cloudcele.com.key
+</code></pre> 
+<p>重启docker进程</p> 
+<pre><code class="prism language-shell">systemctl restart docker
+</code></pre> 
+<p>登录harbor仓库</p> 
+<pre><code class="prism language-shell"><span class="token comment"># docker login registry.cloudcele.com</span>
+Username: admin
+Password: 
+WARNING<span class="token operator">!</span> Your password will be stored unencrypted <span class="token keyword">in</span> /root/.docker/config.json.
+Configure a credential helper to remove this warning. See
+https://docs.docker.com/engine/reference/commandline/login/<span class="token comment">#credentials-store</span>
+
+Login Succeeded
+</code></pre> 
+<p>上传docker镜像</p> 
+<pre><code class="prism language-shell"><span class="token punctuation">[</span>root@master ~<span class="token punctuation">]</span><span class="token comment"># docker push registry.cloudcele.com/library/nginx</span>
+Using default tag: latest
+The push refers to repository <span class="token punctuation">[</span>registry.cloudcele.com/library/nginx<span class="token punctuation">]</span>
+d9eb91d66e2a: Pushed 
+ae1f545e4c08: Pushed 
+c20672db3628: Pushed 
+4cbb728cd302: Pushing <span class="token punctuation">[</span><span class="token operator">=</span><span class="token operator">&gt;</span>                                                 <span class="token punctuation">]</span>  <span class="token number">1</span>.609MB/63.74MB
+4cbb728cd302: Pushed 
+9eb82f04c782: Pushed 
+latest: digest: sha256:1a53eb723d17523512bd25c27299046cfa034cce309f4ed330c943a304513f59 size: <span class="token number">1362</span>
+</code></pre> 
+<p>拉取docker镜像</p> 
+<pre><code class="prism language-shell"><span class="token punctuation">[</span>root@master ~<span class="token punctuation">]</span><span class="token comment"># docker pull registry.cloudcele.com/library/nginx</span>
+Using default tag: latest
+latest: Pulling from library/nginx
+Digest: sha256:1a53eb723d17523512bd25c27299046cfa034cce309f4ed330c943a304513f59
+Status: Image is up to <span class="token function">date</span> <span class="token keyword">for</span> registry.cloudcele.com/library/nginx:latest
+registry.cloudcele.com/library/nginx:latest
+</code></pre> 
+<p>参考：<a href="https://cloud.tencent.com/developer/article/1838838">https://cloud.tencent.com/developer/article/1838838</a></p>
+                </div>
+                
+                
+        </div>
+    
+                                <p style="text-align: right;">原文作者：willblog</p>
+                                <p style="text-align: right;">原文标题：<a target="_ablank" href="https://blog.csdn.net/networken/article/details/119704025">harbor高可用部署</a></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+			</div>
+			<div style="min-height: 300px; background: white; border-radius: 5px; margin-top: 20px;" class="col-lg-3 col-md-3 visible-md-* visible-lg-* hidden-xs hidden-sm okgoes-side">
+				<div class="okgoes-panel-title">
+					热门文章
+                </div>
+                <div style="padding: 10px 0;" class="okgoes-panel-body okgoes-communtiy-personer">
+                    
+                     <p style="text-overflow: ellipsis; word-wrap: normal;overflow: hidden;white-space: nowrap;"><a href="http://dreamphp.cn/blog/detail?blog_id=25468">SpringCloudAlibaba学习总结</a></p>
+                     
+                     <p style="text-overflow: ellipsis; word-wrap: normal;overflow: hidden;white-space: nowrap;"><a href="http://dreamphp.cn/blog/detail?blog_id=25262">DevOps习题</a></p>
+                     
+                     <p style="text-overflow: ellipsis; word-wrap: normal;overflow: hidden;white-space: nowrap;"><a href="http://dreamphp.cn/blog/detail?blog_id=23817">近期CDRX4正常使用中突然提示盗版弹窗您的产品已被禁用永久解决教程</a></p>
+                     
+                     <p style="text-overflow: ellipsis; word-wrap: normal;overflow: hidden;white-space: nowrap;"><a href="http://dreamphp.cn/blog/detail?blog_id=24468">coreldraw2021永久序列号和激活注册教程</a></p>
+                     
+                     <p style="text-overflow: ellipsis; word-wrap: normal;overflow: hidden;white-space: nowrap;"><a href="http://dreamphp.cn/blog/detail?blog_id=26521">r55500u和r54600u区别有多大r55500u和r54600u哪个好</a></p>
+                     
+                     <p style="text-overflow: ellipsis; word-wrap: normal;overflow: hidden;white-space: nowrap;"><a href="http://dreamphp.cn/blog/detail?blog_id=24888">免拆破解电信机顶盒TY1208-Z，绝对成功</a></p>
+                     
+                     <p style="text-overflow: ellipsis; word-wrap: normal;overflow: hidden;white-space: nowrap;"><a href="http://dreamphp.cn/blog/detail?blog_id=19546">2020年“华为杯”中国研究生数学建模竞赛【持续更新】</a></p>
+                     
+                     <p style="text-overflow: ellipsis; word-wrap: normal;overflow: hidden;white-space: nowrap;"><a href="http://dreamphp.cn/blog/detail?blog_id=22758">卸载EDR软件提示：需要输入防护密码；教你在不需要密码的情况下，如何通过两步解决无法卸载的问题</a></p>
+                     
+                     <p style="text-overflow: ellipsis; word-wrap: normal;overflow: hidden;white-space: nowrap;"><a href="http://dreamphp.cn/blog/detail?blog_id=25914">jeecg-boot学习及调通步骤</a></p>
+                     
+                     <p style="text-overflow: ellipsis; word-wrap: normal;overflow: hidden;white-space: nowrap;"><a href="http://dreamphp.cn/blog/detail?blog_id=25339">升级XCode12.3报错Buildingfor,butthelinkedandembeddedframeworkwasbuiltforiOS+iOSSimulator</a></p>
+                     
+                 </div>
+            </div>
+
+            <div style="min-height: 300px; background: white; border-radius: 5px; margin-top: 20px;" class="col-lg-3 col-md-3 visible-md-* visible-lg-* hidden-xs hidden-sm okgoes-side">
+				<div class="okgoes-panel-title">
+					最新发布
+                </div>
+                <div style="padding: 10px 0;" class="okgoes-panel-body okgoes-communtiy-personer">
+                    
+                     <p style="text-overflow: ellipsis; word-wrap: normal;overflow: hidden;white-space: nowrap;"><a href="http://dreamphp.cn/blog/detail?blog_id=32418">十三、【分布式微服务企业快速架构】SpringCloud分布式、微服务、云架构之Eclipse创建XML文件</a></p>
+                     
+                     <p style="text-overflow: ellipsis; word-wrap: normal;overflow: hidden;white-space: nowrap;"><a href="http://dreamphp.cn/blog/detail?blog_id=32415">【王喆-推荐系统】前沿篇-(task1)YouTube推荐架构</a></p>
+                     
+                     <p style="text-overflow: ellipsis; word-wrap: normal;overflow: hidden;white-space: nowrap;"><a href="http://dreamphp.cn/blog/detail?blog_id=32417">【王喆-推荐系统】前沿篇-(task1)YouTube推荐架构</a></p>
+                     
+                     <p style="text-overflow: ellipsis; word-wrap: normal;overflow: hidden;white-space: nowrap;"><a href="http://dreamphp.cn/blog/detail?blog_id=32412">【王喆-推荐系统】前沿篇-(task1)YouTube推荐架构</a></p>
+                     
+                     <p style="text-overflow: ellipsis; word-wrap: normal;overflow: hidden;white-space: nowrap;"><a href="http://dreamphp.cn/blog/detail?blog_id=32416">【王喆-推荐系统】前沿篇-(task1)YouTube推荐架构</a></p>
+                     
+                     <p style="text-overflow: ellipsis; word-wrap: normal;overflow: hidden;white-space: nowrap;"><a href="http://dreamphp.cn/blog/detail?blog_id=32414">【王喆-推荐系统】前沿篇-(task1)YouTube推荐架构</a></p>
+                     
+                     <p style="text-overflow: ellipsis; word-wrap: normal;overflow: hidden;white-space: nowrap;"><a href="http://dreamphp.cn/blog/detail?blog_id=32413">【王喆-推荐系统】前沿篇-(task1)YouTube推荐架构</a></p>
+                     
+                     <p style="text-overflow: ellipsis; word-wrap: normal;overflow: hidden;white-space: nowrap;"><a href="http://dreamphp.cn/blog/detail?blog_id=32409">H3CNE综合实验</a></p>
+                     
+                     <p style="text-overflow: ellipsis; word-wrap: normal;overflow: hidden;white-space: nowrap;"><a href="http://dreamphp.cn/blog/detail?blog_id=32411">H3CNE综合实验</a></p>
+                     
+                     <p style="text-overflow: ellipsis; word-wrap: normal;overflow: hidden;white-space: nowrap;"><a href="http://dreamphp.cn/blog/detail?blog_id=32410">H3CNE综合实验</a></p>
+                     
+                 </div>
+			</div>
+
+		</div>
+	</div>
+</main>
+    <footer>
+        <nav class="navbar navbar-default">
+            <div class="container-fluid">
+                <div class="row okgoes-footer">
+                    <p style="text-align: center;width: 100%;" align="center">© 2015 - 2022 <a target="_blank" href="http://www.okgoes.com/">OKGOES Inc.</a>All rights reserved 保留所有权利&nbsp;|&nbsp;<a href="http://dreamphp.cn/">起航博客</a>&nbsp;|&nbsp;<a href="https://blog.okgoes.com/">完美起航</a><a target="_blank" class="benanhao" href="https://beian.miit.gov.cn/">&nbsp;|&nbsp;赣ICP备15002760号-3号</a></p>
+                </div>
+            </div>
+        </nav>
+    </footer>
+    
+    <script src="./完美起航-harbor高可用部署_files/bootstrap.min.js.下载" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="./完美起航-harbor高可用部署_files/bootstrap-datepicker.min.js.下载"></script>
+    <script type="text/javascript" src="./完美起航-harbor高可用部署_files/bootstrap-datetimepicker.min.js.下载"></script>
+    <script type="text/javascript" src="./完美起航-harbor高可用部署_files/bootstrap-datepicker.zh-CN.min.js.下载" charset="UTF-8"></script>
+    <script type="text/javascript" src="./完美起航-harbor高可用部署_files/bootstrap-datetimepicker.zh-CN.js.下载" charset="UTF-8"></script>
+    <script src="./完美起航-harbor高可用部署_files/carousel.js.下载"></script>
+    <script src="./完美起航-harbor高可用部署_files/common.js.下载"></script>
+    <script type="text/javascript">
+        href = window.location.href;
+        console.log(href);
+        if (href.indexOf("learnclub") != -1) {
+            $(".benanhao").html("&nbsp;|&nbsp;赣ICP备15002760-2号");
+        } else if (href.indexOf("dreamphp") != -1) {
+            $(".benanhao").html("&nbsp;|&nbsp;赣ICP备15002760号-3号");
+        }
+
+        function pageSuit () {
+            var mainHeight = $("body").height() - 100;
+            var screenHeight = $(window).height() - 200;
+            console.log(">>>>", mainHeight, screenHeight, mainHeight >  screenHeight);
+            if (mainHeight >  screenHeight) {
+                $("footer nav").removeClass("navbar-fixed-bottom");
+                $("footer nav").prop("class", "navbar navbar-default");
+            } else {
+                $("footer nav").prop("class", "navbar navbar-default navbar-fixed-bottom");
+            }
+        }
+        $("img").unbind("load").bind("load", pageSuit);
+        window.onresize = pageSuit;
+        $(function() {
+            pageSuit();
+        });
+    </script>
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?48c441f68a46b852304c3db081a03f5e";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+</body></html>
