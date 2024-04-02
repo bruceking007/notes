@@ -1,0 +1,6 @@
+【Prometheus操作指南】
+https://www.bookstack.cn/books/prometheus-book
+https://www.bookstack.cn/read/prometheus-book/quickstart-prometheus-quick-start.md
+
+【PrometheusAlert】
+https://github.com/feiyu563/PrometheusAlert
