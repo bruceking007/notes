@@ -1,0 +1,63 @@
+【镜像制作】
+# 镜像是怎么做成的。基础环境+软件 
+redis的完整镜像应该是： linux系统+redis软件 
+alpine：超级经典版的linux 5mb；+ redis = 29.0mb 
+没有alpine3的：就是centos基本版 
+# 以后自己选择下载镜像的时候尽量使用 alpine： slim：
+
+【挂载】
+如果自己开发测试，用 -v 绝对路径的方式  这个有空挂载问题，如果宿主机的目录是空的会导致容器挂载目录也会空
+如果是生产环境建议用卷  容器内的内容是什么就会挂载到宿主机
+除非特殊 /bin/docker 需要挂载主机路径的则操作 绝对路径挂载
+
+-v 不是绝对路径开头的就是使用卷挂载
+
+【ARG】
+# 定义以后的剩下环节（不包括运行时）能生效：取值$param；
+#可以在构建时进行变化，docker build
+# ARG不像ENV不能并排写
+ARG param=123456  
+ARG msg="hello docker"
+
+只针对构建时有效
+运行时无效（如CMD ENTRYPOINT命令中使用无效）
+
+
+【ENV】
+#构建期+运行期都可以生效；但是只能在运行期进行修改
+#怎么修改：构建期修改和运行期修改
+#构建期不能改 ENV的值
+#运行期：docker run -e app=atguigu 就可以修改
+ENV app=itdachang
+
+【ADD】
+# 如果是远程文件，自动下载；
+# 如果是压缩包，自动解压；
+
+【RUN】
+# RUN指令上下并没有上下文关系；
+# RUN cd /dest
+
+# 当前还是列举的根目录
+# RUN ls -l
+RUN cd /dest && ls -l
+
+【容器同步系统时间】
+## 容器同步系统时间 CST（China Shanghai Timezone）
+-v /etc/localtime:/etc/localtime:ro #已经不同步的如何同步？ docker cp /etc/localtime 容器id:/etc/
+
+【Images瘦身实践】
+选择最小的基础镜像
+合并RUN环节的所有指令，少生成一些层
+RUN期间可能安装其他程序会生成临时缓存，要自行删除。
+
+
+【docker 容器重命名】
+docker rename 容器ID 新定义的容器名
+
+【查看镜像支持的环境变量】
+docker run imageID env
+
+【容器退出状态下数据不会丢失】
+容器退出后会处于终止（exited）状态，此时可以通过docker ps -a查看，其中数据不会丢失，还可以通
+过docker start来启动，只要删除容器才会清除数据。

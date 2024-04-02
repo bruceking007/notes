@@ -1,0 +1,73 @@
+【CentOS 7 (使用yum进行安装)】
+
+# step 1: 安装必要的一些系统工具
+
+$ sudo yum install -y yum-utils device-mapper-persistent-data lvm2
+
+# Step 2: 添加软件源信息
+
+$ sudo yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+
+# Step 3: 更新并安装 Docker-CE
+
+$ sudo yum makecache fast
+
+$ sudo yum -y install docker-ce
+
+# Step 4: 开启Docker服务
+
+systemctl start docker 
+systemctl enable docker
+systemctl status docker 
+
+https://developer.aliyun.com/article/625258?spm=5176.21213303.J_6704733920.10.1c6c3edacyu9X1&scm=20140722.S_community%40%40%E6%96%87%E7%AB%A0%40%40625258._.ID_community%40%40%E6%96%87%E7%AB%A0%40%40625258-RL_docker%E5%AE%89%E8%A3%85-LOC_main-OR_ser-V_2-P0_1
+
+【加速器地址】
+https://lb3cvacp.mirror.aliyuncs.com
+
+1. 安装／升级Docker客户端
+推荐安装1.10.0以上版本的Docker客户端，参考文档docker-ce
+
+2. 配置镜像加速器
+针对Docker客户端版本大于 1.10.0 的用户
+
+您可以通过修改daemon配置文件/etc/docker/daemon.json来使用加速器
+
+sudo mkdir -p /etc/docker
+sudo tee /etc/docker/daemon.json <<-'EOF'
+{
+  "registry-mirrors": ["https://lb3cvacp.mirror.aliyuncs.com"]
+}
+EOF
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+
+================【生成环境配置参考】
+sudo mkdir -p /etc/docker
+sudo tee /etc/docker/daemon.json <<-'EOF'
+{
+  "data-root":"/data/docker",
+  "registry-mirrors": ["https://lb3cvacp.mirror.aliyuncs.com"],
+  "exec-opts": ["native.cgroupdriver=systemd"],
+  "log-driver": "json-file",
+  "log-level": "warn",
+  "log-opts": {
+    "max-size": "100m",
+    "max-file": "10"
+  },
+  "live-restore": true,
+  "storage-driver": "overlay2",
+  "storage-opts": [ "overlay2.override_kernel_check=true"]，
+  {"bip": "10.50.0.1/16", "default-address-pools": [{"base": "10.51.0.1/16", "size": 24}]}
+}
+EOF
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+
+
+【https://hub.docker.com/】
+kingofzhou/zjh8108zjh
+
+
+for i in `docker ps -a|grep -i exit|awk '{print $1}'`;do docker rm -f $i; done  过滤出已经退出的容器，然后删除掉。
+docker rm -f `docker ps -a -q` 删除所有容器
