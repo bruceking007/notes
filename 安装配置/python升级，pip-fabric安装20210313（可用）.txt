@@ -1,0 +1,92 @@
+# python -V    # 查看python 版本
+# cd /home/centos/Downloads    # 进入存放目录
+# wget https://www.python.org/ftp/python/3.8.9/Python-3.8.9.tgz      # 获取新版的 python
+# tar xvf Python-3.8.9.tgz      # 解压文件
+# cd ./Python-3.8.9     # 进入解压后的文件目录
+# mkdir /usr/local/python3.8    # 创建编译安装目录
+# ./configure --prefix=/usr/local/python3.8    # 配置编译安装目录
+# make && make install    # 编译安装
+
+
+cd /usr/local/src   
+wget https://www.python.org/ftp/python/3.8.9/Python-3.8.9.tgz
+tar xvf Python-3.8.9.tgz
+cd ./Python-3.8.9
+mkdir /usr/local/python3.8
+./configure --prefix=/usr/local/python3.8 --with-ssl
+make && make install
+mv /usr/bin/python /usr/bin/python.bak
+ln -sfv /usr/local/python3.8/bin/python3.8  /usr/bin/python
+
+
+-----------------------------------------------------------------------------------
+zipimport.ZipImportError: can't decompress data; zlib not available
+解决 zipimport.ZipImportError: can't decompress data; zlib not available 的方法：
+
+1.下载源码： http://www.zlib.net/
+2.解压安装：
+
+# cd /home/centos/Downloads/
+# tar zxvf zlib-1.2.11.tar.gz 
+# cd zlib-1.2.11
+# ./configure
+# make && make install
+重新安装 python2:
+
+# cd /home/centos/Downloads/Python-3.8.9
+# ./configure -- prefix=/usr/local/python2
+# make && make install
+# mv /usr/bin/python /usr/bin/python_old    # 备份旧的python
+# ln -s /usr/local/python2/bin/python2 /usr/bin/python    # 把新的 python2 链接到 python
+# python
+Python 3.8.9 (default, May 30 2017, 18:13:28) 
+
+问题1：yum安装报错
+
+No module named yum
+# yum search    # 安装完后导致 yum 不可用
+File "/usr/bin/yum", line 30
+    except KeyboardInterrupt, e:
+                            ^
+SyntaxError: invalid syntax
+解决 yum 不可用：
+
+vim /usr/bin/yum
+#!/usr/bin/python ----->#!/usr/bin/python2.6
+---------------------------------------------------------------------------------
+
+
+---pip安装，下载py文件：
+curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+上传至服务器之后执行： /usr/local/python3.8/bin/python3.8  get-pip.py  安装pip即可
+
+使用pip安装fabric： pip install fabric 稍等一会就安装完毕了，这时输入 fab 就会弹出对应的选项
+
+出现pip命令未发现=======================-bash: pip: command not found
+
+#find / -name pip
+/usr/local/python3.8/bin/pip
+/usr/local/python3.8/lib/python3.8/site-packages/pip
+/root/.cache/pip
+
+#ln -sfv /usr/local/python3.8/bin/pip /usr/bin/pip
+"/usr/bin/pip" -> "/usr/local/python3.8/bin/pip"
+
+pip -V
+
+
+#pip install pyopenssl ndg-httpsclient pyasn1
+#pip install fabric
+pip install pyyaml
+pip install pycrypto
+
+
+++++++++++++
+-bash: fab: command not found
+
+find /usr/local/python3.8 -name "*fab*"
+
+ln -sfv /usr/local/python3.8/bin/fab /usr/bin/fab
+
+fab -V #查看版本
+

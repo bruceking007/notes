@@ -1,0 +1,75 @@
+https://www.cnblogs.com/lei0213/p/8723106.html
+https://help.aliyun.com/document_detail/187016.html
+https://www.cnblogs.com/zhi-leaf/p/6282301.html
+https://blog.csdn.net/liumiaocn/article/details/88408155
+
+【启停】
+开机启动：systemctl enable chronyd
+启动服务：systemctl start chronyd
+查看状态：systemctl status chronyd
+
+【设置亚洲时区】
+timedatectl set-timezone Asia/Shanghai
+
+【启用NTP同步(启用NTP服务或者Chrony服务)】
+timedatectl set-ntp yes
+timedatectl set-ntp true
+
+与NTP enabled有关
+
+【运行以下命令更新硬件时钟（RTC）】
+hwclock -w
+
+【运行以下命令查看时区】
+timedatectl status
+
+【查看本机时间同步状态，用于验证服务是否已启动】
+chronyc tracking
+
+【查看时间同步服务器列表【
+chronyc -n sources -v
+
+【查看 ntp_servers 状态】
+chronyc sourcestats -v
+
+【查看 ntp_servers 是否在线】
+chronyc activity -v
+
+【查看服务是否正在运行】
+systemctl is-active chronyd
+
+【查看服务是否开机自启动】     
+systemctl is-enabled  chronyd   
+
+【^*】 表示已和服务端同步
+
+【公共NTP：国内】
+server time1.cloud.tencent.com iburst
+server ntp.aliyun.com iburst
+
+【公共NTP：国际】
+server time1.google.com iburst
+server time.apple.com iburst
+server ntp.cloud.aliyuncs.com iburst
+
+【其他】
+
+minpoll表示客户端最小同步间隔，maxpoll表示最大同步间隔。4和10表示的是2的4次方和2的10次方
+
+备注：默认情况下至少1分钟(64s)到16分钟(1000s)之间会与上层NTP服务器进行时间校对,我们这里通过minpoll和maxpoll来缩短同步时间,minpoll/maxpoll规定查询的间隔,以2的幕的形式,取值范围在4-17.
+
+例如,minpoll 3表示2的3次方,也就是最短8秒钟后主动与上层NTP服务器同步一次,maxpoll 4表示2的4次方,也就是最长16秒钟后主动与上层NTP服务器同步一次.
+
+如果连接NTP上层服务器失败,ntp服务会跳过失败的NTP服务器,而以配置项的顺序依次与ntp服务器同步
+https://blog.csdn.net/xxyztwz/article/details/38473027
+
+
+【问题】Warning: The system is configured to read the RTC time in the local time zone.
+(Real-Time Clock)或CMOS时间和本地时间不同，需要执行timedatectl set-local-rtc 0,RTC time就是硬件时钟的时间
+使用timedatectl 查看后，发现硬件时钟时间被启用
+RTC in local TZ: yes #无特殊情况，不能启用硬件的时钟来校时
+
+运行命令timedatectl set-local-rtc 0，关闭硬件时钟校时，如下显示no即正常了：
+RTC in local TZ: no
+
+https://www.cnblogs.com/liusingbon/p/14945736.html

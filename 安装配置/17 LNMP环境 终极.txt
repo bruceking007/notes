@@ -1,0 +1,511 @@
+
+
+LNMP环境搭建
+====================================================================
+Linux(RHEL6.4) + Nginx(FastCGI) + PHP(php-fpm) + MySQL	
+
+所需软件包
+nginx-1.4.4.tar.gz
+php-5.5.7.tar.gz
+cmake-2.8.10.2.tar.gz
+mysql-5.5.33.tar.gz
+Discuz_X3.1_SC_UTF8.zip
+
+一、安装Nginx
+1. pcre: 支持正则表达式，地址重写rewrite
+# tar xvf pcre-8.10.tar.gz
+# cd pcre-8.10
+# ./configure --prefix=/usr/local/pcre && make && make install
+
+2. Nginx：+ 清缓存模块安装
+# yum -y install openssl openssl-devel
+# groupadd www
+# useradd -g www www
+# wget  http://labs.frickle.com/files/ngx_cache_purge-2.3.tar.gz
+# tar xf nginx-1.9.6.tar.gz
+# tar xzvf ngx_cache_purge-2.3 (加速缓存)
+# cd nginx-1.9.6
+
+# ./configure \
+  --prefix=/usr/local/nginx \
+  --sbin-path=/usr/sbin/nginx \
+  --conf-path=/etc/nginx/nginx.conf \
+  --error-log-path=/var/log/nginx/error.log \
+  --http-log-path=/var/log/nginx/access.log \
+  --pid-path=/var/run/nginx/nginx.pid  \
+  --lock-path=/var/lock/nginx.lock \
+  --user=nginx \
+  --group=nginx \
+  --with-http_ssl_module \
+  --with-http_flv_module \
+  --with-http_stub_status_module \
+  --with-http_gzip_static_module \
+  --http-client-body-temp-path=/var/tmp/nginx/client/ \
+  --http-proxy-temp-path=/var/tmp/nginx/proxy/ \
+  --http-fastcgi-temp-path=/var/tmp/nginx/fcgi/ \
+  --http-uwsgi-temp-path=/var/tmp/nginx/uwsgi \
+  --http-scgi-temp-path=/var/tmp/nginx/scgi \
+  --with-pcre
+  --add-module=../ngx_cache_purge-2.3
+# make && make install
+# /usr/sbin/nginx -V 查看编译过什么模块
+
+说明：如果想使用nginx的perl模块，可以通过为configure脚本添加--with-http_perl_module选项来实现，但目前此模块仍处于实验性使用阶段，可能会在运行中出现意外，因此，其实现方式这里不再介绍。如果想使用基于nginx的cgi功能，也可以基于FCGI来实现，具体实现方法请参照网上的文档。
+
+3、为nginx提供SysV init脚本:
+
+新建文件vim /etc/rc.d/init.d/nginx，内容如下：
+#!/bin/sh
+#
+# nginx - this script starts and stops the nginx daemon
+#
+# chkconfig:   - 85 15 
+# description:  Nginx is an HTTP(S) server, HTTP(S) reverse \
+#               proxy and IMAP/POP3 proxy server
+# processname: nginx
+# config:      /etc/nginx/nginx.conf
+# config:      /etc/sysconfig/nginx
+# pidfile:     /var/run/nginx.pid
+ 
+# Source function library.
+. /etc/rc.d/init.d/functions
+ 
+# Source networking configuration.
+. /etc/sysconfig/network
+ 
+# Check that networking is up.
+[ "$NETWORKING" = "no" ] && exit 0
+ 
+nginx="/usr/sbin/nginx"
+prog=$(basename $nginx)
+ 
+NGINX_CONF_FILE="/etc/nginx/nginx.conf"
+ 
+[ -f /etc/sysconfig/nginx ] && . /etc/sysconfig/nginx
+ 
+lockfile=/var/lock/subsys/nginx
+ 
+make_dirs() {
+   # make required directories
+   user=`nginx -V 2>&1 | grep "configure arguments:" | sed 's/[^*]*--user=\([^ ]*\).*/\1/g' -`
+   options=`$nginx -V 2>&1 | grep 'configure arguments:'`
+   for opt in $options; do
+       if [ `echo $opt | grep '.*-temp-path'` ]; then
+           value=`echo $opt | cut -d "=" -f 2`
+           if [ ! -d "$value" ]; then
+               # echo "creating" $value
+               mkdir -p $value && chown -R $user $value
+           fi
+       fi
+   done
+}
+ 
+start() {
+    [ -x $nginx ] || exit 5
+    [ -f $NGINX_CONF_FILE ] || exit 6
+    make_dirs
+    echo -n $"Starting $prog: "
+    daemon $nginx -c $NGINX_CONF_FILE
+    retval=$?
+    echo
+    [ $retval -eq 0 ] && touch $lockfile
+    return $retval
+}
+ 
+stop() {
+    echo -n $"Stopping $prog: "
+    killproc $prog -QUIT
+    retval=$?
+    echo
+    [ $retval -eq 0 ] && rm -f $lockfile
+    return $retval
+}
+ 
+restart() {
+    configtest || return $?
+    stop
+    sleep 1
+    start
+}
+ 
+reload() {
+    configtest || return $?
+    echo -n $"Reloading $prog: "
+    killproc $nginx -HUP
+    RETVAL=$?
+    echo
+}
+ 
+force_reload() {
+    restart
+}
+ 
+configtest() {
+  $nginx -t -c $NGINX_CONF_FILE
+}
+ 
+rh_status() {
+    status $prog
+}
+ 
+rh_status_q() {
+    rh_status >/dev/null 2>&1
+}
+ 
+case "$1" in
+    start)
+        rh_status_q && exit 0
+        $1
+        ;;
+    stop)
+        rh_status_q || exit 0
+        $1
+        ;;
+    restart|configtest)
+        $1
+        ;;
+    reload)
+        rh_status_q || exit 7
+        $1
+        ;;
+    force-reload)
+        force_reload
+        ;;
+    status)
+        rh_status
+        ;;
+    condrestart|try-restart)
+        rh_status_q || exit 0
+            ;;
+    *)
+        echo $"Usage: $0 {start|stop|status|restart|condrestart|try-restart|reload|force-reload|configtest}"
+        exit 2
+esac
+
+而后为此脚本赋予执行权限：
+# chmod +x /etc/rc.d/init.d/nginx
+
+添加至服务管理列表，并让其开机自动启动：
+# chkconfig --add nginx
+# chkconfig nginx on
+
+而后就可以启动服务并测试了：
+# service nginx start
+		
+# netstat -tnlp |grep :80
+tcp        0      0 0.0.0.0:80                  0.0.0.0:*                   LISTEN      11051/nginx
+# elinks -dump http://localhost
+                               Welcome to nginx!
+
+
+
+二、安装PHP:
+
+安装 php-5.2.14 源代码包所需要的函数支持包
+
+tar xzvf libiconv-1.14.tar.gz
+cd libiconv-1.13.1/
+./configure --prefix=/usr/local
+make
+make install
+cd ../
+
+tar xzvf libmcrypt-2.5.8.tar.gz
+cd libmcrypt-2.5.8/
+./configure
+make
+make install
+cd libltdl/
+./configure --enable-ltdl-install
+make
+make install
+cd ../../
+
+tar zxvf mhash-0.9.9.9.tar.gz
+cd mhash-0.9.9.9/
+./configure
+make
+make install
+cd ../
+
+ln -s /usr/local/lib/libmcrypt.la /usr/lib/libmcrypt.la
+ln -s /usr/local/lib/libmcrypt.so /usr/lib/libmcrypt.so
+ln -s /usr/local/lib/libmcrypt.so.4 /usr/lib/libmcrypt.so.4
+ln -s /usr/local/lib/libmcrypt.so.4.4.8 /usr/lib/libmcrypt.so.4.4.8
+ln -s /usr/local/lib/libmhash.a /usr/lib/libmhash.a
+ln -s /usr/local/lib/libmhash.la /usr/lib/libmhash.la
+ln -s /usr/local/lib/libmhash.so /usr/lib/libmhash.so
+ln -s /usr/local/lib/libmhash.so.2 /usr/lib/libmhash.so.2
+ln -s /usr/local/lib/libmhash.so.2.0.1 /usr/lib/libmhash.so.2.0.1
+ln -s /usr/local/bin/libmcrypt-config /usr/bin/libmcrypt-config
+
+tar zxvf mcrypt-2.6.8.tar.gz
+cd mcrypt-2.6.8/
+./configure
+make
+make install
+cd ../
+
+
+# yum -y install libjpeg libjpeg-devel libpng libpng-devel freetype freetype-devel libxml2 libxml2-devel libcurl libcurl-devel libxslt-devel
+
+tar xzvf php-5.5.7.tar.gz
+#./configure --prefix=/usr/local/php \
+--with-curl \
+--with-freetype-dir \
+--with-gd \
+--with-gettext \
+--with-iconv-dir \
+--with-jpeg-dir \
+--with-kerberos \
+--with-libdir=lib64 \
+--with-libxml-dir \
+--with-mysql \
+--with-mysqli \
+--with-openssl \
+--with-pcre-regex \
+--with-pdo-mysql \
+--with-pdo-sqlite \
+--with-pear \
+--with-png-dir \
+--with-xmlrpc \
+--with-xsl \
+--with-zlib \
+--enable-fpm \
+--enable-bcmath \
+--enable-libxml \
+--enable-inline-optimization \
+--enable-gd-native-ttf \
+--enable-mbregex \
+--enable-mbstring \
+--enable-opcache \
+--enable-pcntl \
+--enable-shmop \
+--enable-soap \
+--enable-sockets \
+--enable-sysvsem \
+--enable-xml \
+--enable-zip
+# make ZEND_EXTRA_LIBS='-liconv' 
+# make install  
+
+# cp /usr/local/php/etc/php-fpm.conf.default /usr/local/php/etc/php-fpm.conf
+# vim /usr/local/php/etc/php-fpm.conf
+pid = run/php-fpm.pid
+# cp php.ini-production /usr/local/php/lib/php.ini
+
+
+添加到init启动
+[root@test php-5.5.7]# cp sapi/fpm/init.d.php-fpm /etc/rc.d/init.d/php-fpm
+[root@test php-5.5.7]# chmod a+x /etc/rc.d/init.d/php-fpm
+[root@test php-5.5.7]# chkconfig --add php-fpm
+[root@test php-5.5.7]# chkconfig php-fpm on
+[root@test php-5.5.7]# service php-fpm start
+Starting php-fpm  done
+
+ps aux | grep php-fpm
+
+
+
+三、整合Nginx和PHP
+1. Nginx启用Fastcgi
+[root@test php-5.5.7]# vim /etc/nginx/nginx.conf
+1、编辑/etc/nginx/nginx.conf，启用如下选项：
+location ~ \.php$ {
+            root           html;
+            fastcgi_pass   127.0.0.1:9000;
+            fastcgi_index  index.php;
+            fastcgi_param  SCRIPT_FILENAME  /scripts$fastcgi_script_name;
+            include        fastcgi_params;
+        }
+
+2、编辑/etc/nginx/fastcgi_params，将其内容更改为如下内容：
+fastcgi_param  GATEWAY_INTERFACE  CGI/1.1;
+fastcgi_param  SERVER_SOFTWARE    nginx;
+fastcgi_param  QUERY_STRING       $query_string;
+fastcgi_param  REQUEST_METHOD     $request_method;
+fastcgi_param  CONTENT_TYPE       $content_type;
+fastcgi_param  CONTENT_LENGTH     $content_length;
+fastcgi_param  SCRIPT_FILENAME    $document_root$fastcgi_script_name;
+fastcgi_param  SCRIPT_NAME        $fastcgi_script_name;
+fastcgi_param  REQUEST_URI        $request_uri;
+fastcgi_param  DOCUMENT_URI       $document_uri;
+fastcgi_param  DOCUMENT_ROOT      $document_root;
+fastcgi_param  SERVER_PROTOCOL    $server_protocol;
+fastcgi_param  REMOTE_ADDR        $remote_addr;
+fastcgi_param  REMOTE_PORT        $remote_port;
+fastcgi_param  SERVER_ADDR        $server_addr;
+fastcgi_param  SERVER_PORT        $server_port;
+fastcgi_param  SERVER_NAME        $server_name;
+
+并在所支持的主页面格式中添加php格式的主页，类似如下：
+location / {
+            root   html;
+            index  index.php index.html index.htm;
+        }
+
+而后重新载入nginx的配置文件：
+# service nginx reload
+
+3. 最终确认并重启
+[root@tianyun ~]# killall nginx; /usr/local/nginx/sbin/nginx 
+[root@tianyun ~]# /etc/init.d/php-fpm restart
+[root@tianyun ~]# service mysqld restart
+[root@tianyun ~]# netstat -tnlp |grep :80
+tcp        0      0 0.0.0.0:80                  0.0.0.0:*		LISTEN      17947/nginx         
+[root@tianyun ~]# netstat -tnlp |grep :9000
+tcp        0      0 127.0.0.1:9000              0.0.0.0:*		LISTEN      17961/php-fpm       
+[root@tianyun ~]# netstat -tnlp |grep :3306
+tcp        0      0 :::3306                     :::*                    LISTEN      18265/mysqld    
+
+4、在/usr/html新建index.php的测试页面，测试php是否能正常工作：
+# cat > /usr/html/index.php << EOF
+<?php
+phpinfo();
+?>
+
+接着就可以通过浏览器访问此测试页面了。
+
+
+四、安装MySQL
+
+MySQL Install:
+================================================================================================
+
+
+# yum -y remove mysql mysql-server
+# rm -rf /etc/my.cnf
+# yum -y install ncurses ncurses-devel openssl-devel bison gcc gcc-c++ make
+
+Cmake:
+# tar xvf cmake-2.8.10.2.tar.gz
+# cd cmake-2.8.10.2
+# ./bootstrap 
+# make
+# make install
+# cmake -version
+
+MySQL:
+# groupadd mysql
+# useradd -M -g mysql -s /sbin/nologin mysql
+# tar xvf mysql-5.5.33.tar.gz
+# cd mysql-5.5.33
+# cmake \
+-DCMAKE_INSTALL_PREFIX=/usr/local/mysql \
+-DSYSCONFDIR=/etc \
+-DMYSQL_DATADIR=/usr/local/mysql/data \
+-DINSTALL_MANDIR=/usr/share/man \
+-DMYSQL_TCP_PORT=3306 \
+-DMYSQL_UNIX_ADDR=/tmp/mysql.sock \
+-DDEFAULT_CHARSET=utf8 \
+-DEXTRA_CHARSETS=all \
+-DDEFAULT_COLLATION=utf8_general_ci \
+-DWITH_READLINE=1 \
+-DWITH_SSL=system \
+-DWITH_EMBEDDED_SERVER=1 \
+-DENABLED_LOCAL_INFILE=1 \
+-DWITH_INNOBASE_STORAGE_ENGINE=1
+# make
+# make install
+
+# cd /usr/local/mysql
+# chown -R mysql:mysql .
+# ./scripts/mysql_install_db --user=mysql --basedir=/usr/local/mysql/ --datadir=/usr/local/mysql/data
+
+# cp support-files/my-huge.cnf /etc/my.cnf
+# cp support-files/mysql.server /etc/rc.d/init.d/mysqld
+# chmod 755 /etc/rc.d/init.d/mysqld
+# chkconfig --add mysqld
+# chkconfig mysqld on
+# service mysqld start
+# echo "export PATH=$PATH:/usr/local/mysql/bin" >> /etc/profile
+# source /etc/profile
+#  Vi /etc/my.cnf
+   #修改客户端和连接字符集
+#  default-character-set=utf8
+   #修改服务器和数据库字符集
+#  character-set-server=utf8
+   #修改服务器校验字符集
+#  collation-server=utf8
+
+ 报错时:
+ 根据最后提示，应该是找不着一个交libmysqlclient.so.18的文件，于是到mysql安装目录里找到这个文件并且做一个软连接到/usr/lib
+复制代码 代码如下:
+
+ln -s /usr/local/mysql/lib/libmysqlclient.so.18 /usr/lib/libmysqlclient.so.18
+/tmp/php-5.2.14/sapi/cli/php: error while loading shared libraries: libmysqlclient.so.18: cannot open shared object file: No such file or directory
+
+
+
+
+五、上传php动态网站测试
+1. 测试php文件能否执行
+2. 连接mysql是否正常
+
+[root@test ~]# cd /usr/local/nginx/html/
+[root@test html]# rm -rf *
+[root@test html]# vim index.php
+<?php
+phpinfo();
+?>
+
+
+[root@test html]# vim index2.php
+<?php
+$link=mysql_connect('127.0.0.1','root','123');
+if ($link)
+              echo "Successfuly";
+else
+              echo "Faile";
+mysql_close();
+?>
+
+3. 测试Discuz
+mysql> create database bbs default charse=utf8;
+
+mysql> grant all privileges on *.* to 'bbs'@'localhost' identified by 'bbs';
+mysql> grant all privileges on *.* to 'bbs'@'127.0.0.1' identified by 'bbs';
+mysql> flush privileges
+
+安装discuz!6.0.0
+# cd /usr/local/nginx/html/
+# mkdir bbs
+# unzip /sofeware/Discuz\!_6.0.0_SC_UTF8.zip
+# mv upload/* bbs
+# chmod 777 -R bbs/
+
+http://192.168.190.100/bbs/install/
+
+
+------------------------------------------------------------
+
+安装到mcrypt的时候出现了问题
+./configure
+提示出错，首先提示
+*** Could not run libmcrypt test program, checking why…
+*** The test program failed to compile or link. See the file config.log for the
+*** exact error that occured. This usually means LIBMCRYPT was incorrectly installed
+*** or that you have moved LIBMCRYPT since it was installed. In the latter case, you
+*** may want to edit the libmcrypt-config script: no
+configure: error: *** libmcrypt was not found
+找了相关资料，得出解决方法明明我安装了libmcrypt 2.5.8 ，可是竟然提示没有发现！然后在/usr/local/bin/找到了LIBMCRYPT_CONFIG ，这一步明确了是PATH变量的问题 ！
+方法是ln -s   /usr/local/bin/libmcrypt_config   /usr/bin/libmcrypt_config
+之后继续进行./configure
+仍然报错：
+*** Could not run libmcrypt test program, checking why…
+*** The test program compiled, but did not run. This usually means
+*** that the run-time linker is not finding LIBMCRYPT or finding the wrong
+*** version of LIBMCRYPT. If it is not finding LIBMCRYPT, you’ll need to set your
+*** LD_LIBRARY_PATH environment variable, or edit /etc/ld.so.conf to point
+*** to the installed location   Also, make sure you have run ldconfig if that
+*** is required on your system
+***
+*** If you have an old version installed, it is best to remove it, although
+*** you may also be able to get things to work by modifying LD_LIBRARY_PATH
+***
+configure: error: *** libmcrypt was not found
+
+继续查找，还是变量的问题
+解决方法如下：运行 export LD_LIBRARY_PATH=/usr/local/lib: LD_LIBRARY_PATH
+然后make ； make install
+完成
