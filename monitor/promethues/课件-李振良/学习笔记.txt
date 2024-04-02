@@ -1,0 +1,47 @@
+【后台启动】
+cat > /usr/lib/systemd/system/prometheus.service << EOF
+[Unit]
+Description=prometheus server daemon
+
+[Service]
+Restart=on-failure
+ExecStart=/usr/local/prometheus/prometheus --config.file=/usr/local/prometheus/prometheus.yml
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+
+systemctl daemon-reload
+systemctl start prometheus.service
+
+
+【热更新】
+prometherus 修改了配置文件支持热更新
+kill -hup 4452
+
+【语法检查】
+./prometheus check config prometheus.yml
+
+
+【node-export】
+cat > /usr/lib/systemd/system/node_exporter.service << EOF
+[Unit]
+Description=node_exporter daemon
+
+[Service]
+Restart=on-failure
+ExecStart=/usr/local/node_exporter/node_exporter
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+systemctl start node_exporter.service
+
+
+【监控服务运行状态】
+添加 --collector.systemd --collector.systemd.unit-whitelist=(docker|sshd|nginx).service
+
+ExecStart=/usr/local/node_exporter/node_exporter --collector.systemd --collector.systemd.unit-whitelist=(docker|sshd|nginx).service

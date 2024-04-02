@@ -1,0 +1,24 @@
+global:
+  resolve_timeout: 5m
+  smtp_smarthost: 'smtp.qq.com:465'
+  smtp_from: '751536336@qq.com'
+  smtp_auth_username: '751536336@qq.com'
+  smtp_auth_password: 'jjueigohmavibcbi'
+  smtp_require_tls: false
+
+route:
+  group_by: ['alertname']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 1m
+  receiver: 'mail'
+receivers:
+  - name: 'mail'
+    email_configs:
+      - to: '751536336@qq.com'
+#inhibit_rules:
+#  - source_match:
+#      severity: 'critical'
+#    target_match:
+#      severity: 'warning'
+#    equal: ['alertname', 'dev', 'instance']
