@@ -1,0 +1,10 @@
+#注册iptables服务
+#相当于以前的chkconfig iptables on
+systemctl enable iptables.service
+#开启服务
+systemctl start iptables.service
+#查看状态
+systemctl status iptables.service
+
+一次多个端口设置
+iptables -A INPUT -p tcp -m multiport --dports 3306,27017,6060:6062,9000:9001, -j ACCEPT
