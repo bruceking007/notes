@@ -1,0 +1,18 @@
+https://kubernetes.github.io/ingress-nginx/deploy/
+
+【找到】
+Bare metal clusters¶
+This section is applicable to Kubernetes clusters deployed on bare metal servers, as well as "raw" VMs where Kubernetes was installed manually, using generic Linux distros (like CentOS, Ubuntu...)
+
+For quick testing, you can use a NodePort. This should work on almost every cluster, but it will typically use a port in the range 30000-32767.
+
+
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.1.1/deploy/static/provider/baremetal/deploy.yaml
+For more information about bare metal deployments (and how to use port 80 instead of a random port in the 30000-32767 range), see bare-metal considerations.
+
+【应用】
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.1.1/deploy/static/provider/baremetal/deploy.yaml
+
+或者 
+wget https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.1.1/deploy/static/provider/baremetal/deploy.yaml
+kubectl apply -f deploy.yaml

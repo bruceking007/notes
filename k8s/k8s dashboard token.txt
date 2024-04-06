@@ -1,0 +1,21 @@
+需要输入token，token的生成采用下面的三条命令（固定的，照着操作即可，不用记住）：
+kubectl create serviceaccount dashboard-admin -n kube-system
+
+kubectl create clusterrolebinding dashboard-admin --clusterrole=cluster-admin --serviceaccount=kube-system:dashboard-admin
+
+kubectl describe secrets -n kube-system $(kubectl -n kube-system get secret | awk '/dashboard-admin/{print $1}')
+
+[root@k8smaster ~ 16:07:23&&104]#kubectl describe secrets -n kube-system $(kubectl -n kube-system get secret | awk '/dashboard-admin/{print $1}')
+Name:         dashboard-admin-token-s9tfk
+Namespace:    kube-system
+Labels:       <none>
+Annotations:  kubernetes.io/service-account.name: dashboard-admin
+              kubernetes.io/service-account.uid: 7953d437-f493-4c3f-a2c4-307e5d4b25cc
+
+Type:  kubernetes.io/service-account-token
+
+Data
+====
+token:      eyJhbGciOiJSUzI1NiIsImtpZCI6IkwtYXpIRTlTZkxCeHRuVTU2VDhxcUpZZ3NiNFoteGdrblh1dHdmbkpORGMifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrdWJlLXN5c3RlbSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJkYXNoYm9hcmQtYWRtaW4tdG9rZW4tczl0ZmsiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC5uYW1lIjoiZGFzaGJvYXJkLWFkbWluIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQudWlkIjoiNzk1M2Q0MzctZjQ5My00YzNmLWEyYzQtMzA3ZTVkNGIyNWNjIiwic3ViIjoic3lzdGVtOnNlcnZpY2VhY2NvdW50Omt1YmUtc3lzdGVtOmRhc2hib2FyZC1hZG1pbiJ9.gZWFZ9w_wSnZdRx0pA_RV1DU2I9WEVHZP9MePhPdXQa9MBzPkL5x5Tr6zTLEU2BnA3chNnjEvoIzR-uCTdeQ6Ej11Veepfy0cDZBQNU7P7PJKiW6o3PwDXJzUS9IyP56uYCn59ufe90c-8nzypfxl1FrdtaYmkQ_qCa2htQaKHjafhUnmWYhIIskDfi2r7S_1szqOlfy3vU5vHeKL4fDgHZfsgKoIJRgCWv7do2_azqUHNUrBNJe00Po5ckqvXCVm7Cz5oo-aaAub8S5kK5-awJPIKqoK2p-jXf3P5PHbsm0k4rg7fmGh0OG95XLMJK8R70Ic_D7z1iy4-SE78S96Q
+ca.crt:     1099 bytes
+namespace:  11 bytes

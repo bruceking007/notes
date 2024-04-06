@@ -1,0 +1,48 @@
+【一】官方版
+cat <<EOF > /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64/
+enabled=1
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=https://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg https://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg
+EOF
+
+
+方式【一】官方版会报如下错
+Retrieving key from https://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg
+kubernetes/signature                                                                                                                                                                      | 1.4 kB  00:00:09 !!! 
+https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64/repodata/repomd.xml: [Errno -1] repomd.xml signature could not be verified for kubernetes
+Trying other mirror.
+
+ps: 由于官网未开放同步方式, 可能会有索引gpg检查失败的情况, 这时请用 yum install -y --nogpgcheck kubelet kubeadm kubectl 安装
+
+【二】
+cat > /etc/yum.repos.d/kubernetes.repo << EOF
+[kubernetes]
+name=Kubernetes
+baseurl=https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64/
+enabled=1
+gpgcheck=0
+repo_gpgcheck=0
+gpgkey=https://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg 
+       https://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg
+EOF
+
+方式【二】不会报错
+
+setenforce 0
+yum install -y kubelet kubeadm kubectl
+systemctl enable kubelet && systemctl start kubelet
+
+https://developer.aliyun.com/mirror/kubernetes
+
+
+
+k8s阿里云镜像仓库地址
+
+registry.aliyuncs.com/google_containers
+
+kubeadm init --apiserver-advertise-address=192.168.91.100 --image-repository registry.aliyuncs.com/google_containers --kubernetes-version v1.23.4 --service-cidr=10.96.0.0/12 --pod-network-cidr=10.244.0.0/16
+
