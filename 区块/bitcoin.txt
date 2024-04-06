@@ -1,0 +1,28 @@
+cd /usr/local/bitcoin/bin/ && ./bitcoind >> /data/bitcoin-data/nohup.log 2>&1
+
+./bitcoin-cli -rpcconnect=127.0.0.1 -rpcport=19332 -rpcuser=bituser -rpcpassword=bit2020 getblockchaininfo  
+
+
+./bitcoin-cli -rpcconnect=47.75.142.39 -rpcport=19332 -rpcuser=bituser -rpcpassword=bit2020 getblockchaininfo 
+
+./bitcoind -testnet -datadir=/data/bitcoin-data -rpcbind=0.0.0.0 -rpcallowip=0.0.0.0/0 -rpcport=19333 -rpcuser=bituser -rpcpassword=bit2020 -txindex  -server  >> /data/bitcoin-data/nohup.log 2>&1
+
+
+./bitcoind -testnet -datadir=/data/bitcoin-data -rpcbind=0.0.0.0:19333 -rpcallowip=0.0.0.0/0  -rpcuser=bituser -rpcpassword=bit2020 -txindex  -server  >> /data/bitcoin-data/nohup.log 2>&1
+
+配置文件   /root/.bitcoin/bitcoin.conf
+=========================================
+【bit】
+cd /usr/local/bitcoin/bin/ && ./bitcoind >> /data/bitcoin-data/nohup.log 2>&1
+
+【achain】
+Achain --server --rpcuser admin --rpcpassword abc123qwe --rpcendpoint 0.0.0.0:8298 --httpdendpoint 0.0.0.0:8299 --data-dir /data/achain-data/data --wallet-dir /data/achain-data/wallet 
+
+【geth】
+geth --syncmode fast --networkid 666 --nodiscover --datadir "/home/privatechain/data0" --rpc --rpcapi "db,eth,net,web3,personal,admin,miner" --rpcaddr 0.0.0.0 --rpccorsdomain "*"  --port 10070 --ws --wsaddr "0.0.0.0" --wsapi "db,eth,net,web3,personal"  --allow-insecure-unlock  console 2>> /home/privatechain/geth.log
+
+
+【usdt】
+ cd /usr/local/omnicore/bin/ && ./omnicored --conf=/data/usdt-data/~/.omnicore/omnicore.conf >> /data/usdt-data/nohup.log 2>&1
+ 
+./omnicored --conf=/data/usdt-data/~/.omnicore/omnicore.conf stop

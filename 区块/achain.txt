@@ -1,0 +1,22 @@
+#!/bin/sh
+data_dir=/data/achain-data/data
+wallet_dir=/data/achain-data/wallet
+mkdir -p $data_dir/logs $wallet_dir
+user=admin
+password=abc123qwe
+Achain --server --rpcuser $user --rpcpassword $password --httpdendpoint 0.0.0.0:8299 --data-dir $data_dir --wallet-dir $wallet_dir --daemon >$data_dir/logs/act.log &
+
+
+
+19.blockchain_get_account：获取链上指定帐号的详细信息
+
+Input：
+
+
+7.wallet_account_create：创建一个账户，调用前提：钱包解锁
+
+
+ACT2ZD4jfLbt6tMz2ubAaU6BmmcZ5kwVW36x
+ACT7ZoPSD9zndJmuFd1LywBuDq1MqEyNdK5d3SuXiowMkBqayrX2k
+
+配置文件/data/achain-data/data/config.json

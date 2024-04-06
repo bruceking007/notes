@@ -1,0 +1,103 @@
+【启动停止】
+./omnicored --conf=/data/usdt-data/~/.omnicore/omnicore.conf >> /data/usdt-data/nohup.log 2>&1
+./omnicored --conf=/data/usdt-data/~/.omnicore/omnicore.conf stop
+
+【查看usdt链信息】
+./omnicore-cli -rpcport=18333 --conf=/data/usdt-data/~/.omnicore/omnicore.conf -getinfo
+
+【获取秘钥】
+./omnicore-cli -rpcport=18333 --conf=/data/usdt-data/~/.omnicore/omnicore.conf dumpprivkey 2NCTcKFUUxFUgKdeQNyjCBrYyB7a7WJnMSB
+
+./omnicore-cli -rpcport=18333 -rpcconnect=47.75.142.39 -rpcuser=usdtcuser -rpcpassword=usdtpwd  --conf=/data/usdt-data/~/.omnicore/omnicore.conf  dumpprivkey 2NCTcKFUUxFUgKdeQNyjCBrYyB7a7WJnMSB
+
+cVf45JGeHNKoSrBMEJ3AsVmhaFC1SbhXjXqmXk2MXTypHfkJiUmw
+
+【.查询钱包内的所有地址的USDT余额列表 使用下面的命令可以查看所有余额大于0的币种和余额：】
+./omnicore-cli -rpcport=18333 -rpcconnect=47.75.142.39 -rpcuser=usdtcuser -rpcpassword=usdtpwd  --conf=/data/usdt-data/~/.omnicore/omnicore.conf omni_getwalletaddressbalances
+
+
+【查询余额】
+./omnicore-cli -rpcport=18333 --conf=/data/usdt-data/~/.omnicore/omnicore.conf omni_getbalance "2NCTcKFUUxFUgKdeQNyjCBrYyB7a7WJnMSB" 1
+
+./omnicored --datadir=/data/usdt-data/ --conf=/data/usdt-data/~/.omnicore/omnicore.conf >> /data/usdt-data/nohup.log 2>&1
+./omnicore-cli --datadir=/data/usdt-data/ --conf=/data/usdt-data/~/.omnicore/omnicore.conf stop
+
+
+./omnicored --datadir=/data/usdt-data/ --conf=/data/usdt-data/~/.omnicore/omnicore.conf --txindex   --testnet >> /data/usdt-data/nohup.log 2>&1
+./omnicore-cli --datadir=/data/usdt-data/ --conf=/data/usdt-data/~/.omnicore/omnicore.conf  --testnet stop
+
+
+
+./omnicore-cli --datadir=/data/usdt-data/ --conf=/data/usdt-data/~/.omnicore/omnicore.conf
+
+【获取区块高度】
+./omnicore-cli -rpcport=18333 --conf=/data/usdt-data/~/.omnicore/omnicore.conf getblockcount
+
+【查看区块信息】
+./omnicore-cli -rpcport=18333 --conf=/data/usdt-data/~/.omnicore/omnicore.conf getblockchaininfo
+
+【查看挖矿信息】
+./omnicore-cli -rpcport=18333 --conf=/data/usdt-data/~/.omnicore/omnicore.conf getmininginfo
+
+【查询钱包接收到的交易】
+./omnicore-cli -rpcport=18333 --conf=/data/usdt-data/~/.omnicore/omnicore.conf listtransactions
+
+【取指定omni代币】
+./omnicore-cli -rpcport=18333 -rpcconnect=47.75.142.39 -rpcuser=usdtcuser -rpcpassword=usdtpwd  --conf=/data/usdt-data/~/.omnicore/omnicore.conf "omni_getallbalancesforid" 1 
+
+【单独取某个地址的omni代币】
+./omnicore-cli -rpcport=18333 -rpcconnect=47.75.142.39 -rpcuser=usdtcuser -rpcpassword=usdtpwd  --conf=/data/usdt-data/~/.omnicore/omnicore.conf "omni_getallbalancesforaddress" 2NCTcKFUUxFUgKdeQNyjCBrYyB7a7WJnMSB 
+
+【获取新地址】
+./omnicore-cli  --conf=/data/usdt-data/~/.omnicore/omnicore.conf  getnewaddress 
+./omnicore-cli  --conf=/data/usdt-data/~/.omnicore/omnicore.conf  getnewaddress pusdt
+查询默认账户地址：omnicore-cli -regtest getaccountaddress ""
+
+2NCTcKFUUxFUgKdeQNyjCBrYyB7a7WJnMSB
+
+【转账】
+从 2NCTcKFUUxFUgKdeQNyjCBrYyB7a7WJnMSB 转 0.02 个 OMNI 到 2N7bWQknt7N57zrJEbmdySGJw7AG7ZMbyaW
+
+./omnicore-cli -rpcport=18333 --conf=/data/usdt-data/~/.omnicore/omnicore.conf "omni_send" "2NCTcKFUUxFUgKdeQNyjCBrYyB7a7WJnMSB" "2N7bWQknt7N57zrJEbmdySGJw7AG7ZMbyaW" 1 "0.02"
+
+【测试币查询】
+https://live.blockcypher.com/btc-testnet
+
+【获取测试币】
+https://coinfaucet.eu/en/btc-testnet/   每12小时获取一次
+
+---------------
+Bitcoin Testnet Sandbox
+
+
+We sent 0.02113816 bitcoins to address
+2NCTcKFUUxFUgKdeQNyjCBrYyB7a7WJnMSB
+
+tx: bc2474691d9c3eb543ca21d4287ff65d5d0dac17d33d928bfb510e2e466f001f
+Send coins back, when you don't need them anymore to the address
+
+mv4rnyY3Su5gjcDNzbMLKBQkBicCtHUtFB
+---------------------------
+
+https://bitcoinfaucet.uo1.net/send.php
+
+
+http://kuttler.eu/bitcoin/btc/faucet/ 
+Replenish the faucet:
+tb1q76xzk7fnlel0yerzt5xryjxf54lwl2lu5mm2kl
+
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+获取到比特币测试币之后，往地址moneyqMan7uh8FqdCA2BV5yZ8qVrc9ikLP转一些比特币测试币，然后等交易被确认后，你的地址上就会有一些omni，兑换比例是1TBTC = 100OMNI，转0.1TBTC就会得到10个OMNI。
+测试链没有usdt，所以在测试链上测试时使用omni代替。
+
+发送TBTC命令：
+#./omnicore-cli -rpcport=18333 -rpcuser=usdtcuser -rpcpassword=usdtpwd sendtoaddress   "moneyqMan7uh8FqdCA2BV5yZ8qVrc9ikLP" 0.00001
+34d96106f5db316f97ac466ecec31e49f18c92431f20f68a346721c57b9f2446
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+-testnet -server  -rpcbind=127.0.0.1 -rpcport=18332 -rpcuser=usdtcuser -rpcpassword=usdtpwd -datadir=/data/usdt-data/
+
+
+./omnicore-cli --datadir=/data/usdt-data/ --conf=/data/usdt-data/~/.omnicore/omnicore.conf -getinfo
