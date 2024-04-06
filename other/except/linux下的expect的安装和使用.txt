@@ -1,0 +1,21 @@
+将expect和tcl的软件包下载放到/usr/local/src目录下
+
+tcl（下载地址：http://nchc.dl.sourceforge.net/sourceforge/tcl/tcl8.4.11-src.tar.gz）
+expect（下载地址：http://sourceforge.net/projects/expect/files/Expect/5.45/expect5.45.tar.gz
+
+（1）解压tcl，进入tcl解压目录，然后进入unix目录进行编译安装
+[root@xw4 src]# tar -zvxf tcl8.4.11-src.tar.gz
+[root@xw4 src]# cd tcl8.4.11/unix
+[root@xw4 unix]# ./configure
+[root@xw4 unix]# make && make install
+
+（2）安装expect
+[root@xw4 src]# tar -zvxf expect-5.43.0.tar.gz
+[root@xw4 src]# cd expect-5.43.0
+[root@xw4 expect-5.43.0]# ./configure --with-tclinclude=/usr/local/src/tcl8.4.11/generic --with-tclconfig=/usr/local/lib/
+[root@xw4 expect-5.43.0]# make && make install
+
+(3)安装完成后进行测试
+[root@xw4 ~]# expect
+expect1.1> 
+expect1.1>
