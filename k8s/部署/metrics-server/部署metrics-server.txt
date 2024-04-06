@@ -1,0 +1,19 @@
+创建secret
+kubectl create secret docker-registry aliyun-docker -n kube-system \
+--docker-username=周易不易哟 \
+--docker-password=zjh8108zjh \
+--docker-email=751536336@qq.com
+
+components-aliyun-repo 检查是否有添加- --kubelet-insecure-tls 。
+
+应用
+kubectl apply -f components-aliyun-repo
+
+验证
+kubectl top node
+
+W0630 17:05:32.546225    8225 top_node.go:119] Using json format to get metrics. Next release will switch to protocol-buffers, switch early by passing --use-protocol-buffers flag
+NAME         CPU(cores)   CPU%   MEMORY(bytes)   MEMORY%   
+k8s-master   339m         16%    1913Mi          51%       
+k8s-node1    160m         4%     3514Mi          45%       
+k8s-node2    106m         2%     1258Mi          16%  
