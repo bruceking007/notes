@@ -1,0 +1,326 @@
+pipeline {
+  agent {
+    node {
+      label 'maven'
+    }
+
+  }
+  stages {
+    stage('拉取代码') {
+      agent none
+      steps {
+        container('maven') {
+          git(url: 'https://gitee.com/itsutdy/RuoYi-Cloud.git', credentialsId: 'gitee-id', branch: 'master', changelog: true, poll: false)
+          sh 'ls -al'
+        }
+
+      }
+    }
+
+    stage('项目编译') {
+      agent none
+      steps {
+        container('maven') {
+          sh 'ls -al'
+          sh 'mvn clean package -Dmaven.test.skip=true'
+          sh 'find ./ -name "*.jar"'
+        }
+
+      }
+    }
+
+    stage('default-2') {
+      parallel {
+        stage('构建ruoyi-gateway镜像') {
+          agent none
+          steps {
+            container('maven') {
+              sh 'ls ruoyi-gateway/target'
+              sh 'docker build -t ruoyi-gateway:latest -f ruoyi-gateway/Dockerfile ruoyi-gateway/'
+            }
+
+          }
+        }
+
+        stage('构建ruoyi-auth镜像') {
+          agent none
+          steps {
+            container('maven') {
+              sh 'ls ruoyi-auth/target'
+              sh 'docker build -t ruoyi-auth:latest -f ruoyi-auth/Dockerfile ruoyi-auth/'
+            }
+
+          }
+        }
+
+        stage('构建ruoyi-file镜像') {
+          agent none
+          steps {
+            container('maven') {
+              sh 'ls ruoyi-modules/ruoyi-file/target'
+              sh 'docker build -t ruoyi-file:latest -f ruoyi-modules/ruoyi-file/Dockerfile ruoyi-modules/ruoyi-file/'
+            }
+
+          }
+        }
+
+        stage('构建ruoyi-job镜像') {
+          agent none
+          steps {
+            container('maven') {
+              sh 'ls ruoyi-modules/ruoyi-job/target'
+              sh 'docker build -t ruoyi-job:latest -f ruoyi-modules/ruoyi-job/Dockerfile ruoyi-modules/ruoyi-job/'
+            }
+
+          }
+        }
+
+        stage('构建ruoyi-system镜像') {
+          agent none
+          steps {
+            container('maven') {
+              sh 'ls ruoyi-modules/ruoyi-system/target'
+              sh 'docker build -t ruoyi-system:latest -f ruoyi-modules/ruoyi-system/Dockerfile ruoyi-modules/ruoyi-system/'
+            }
+
+          }
+        }
+
+        stage('构建ruoyi-visual镜像') {
+          agent none
+          steps {
+            container('maven') {
+              sh 'ls ruoyi-visual/ruoyi-monitor/target'
+              sh 'docker build -t ruoyi-visual:latest -f ruoyi-visual/ruoyi-monitor/Dockerfile ruoyi-visual/ruoyi-monitor'
+            }
+
+          }
+        }
+
+      }
+    }
+
+    stage('default-3') {
+      parallel {
+        stage('推送ruoyi-gateway镜像') {
+          agent none
+          steps {
+            container('maven') {
+              withCredentials([usernamePassword(credentialsId : 'aliyun-docker-registry' ,passwordVariable : 'DOCKER_PWD_VAR' ,usernameVariable : 'DOCKER_USER_VAR' ,)]) {
+                sh 'echo "$DOCKER_PWD_VAR" | docker login $REGISTRY -u "$DOCKER_USER_VAR" --password-stdin'
+                sh 'docker tag  ruoyi-gateway:latest $REGISTRY/$DOCKERHUB_NAMESPACE/ruoyi-gateway:SNAPSHOT-$BUILD_NUMBER'
+                sh 'docker push  $REGISTRY/$DOCKERHUB_NAMESPACE/ruoyi-gateway:SNAPSHOT-$BUILD_NUMBER'
+              }
+
+            }
+
+          }
+        }
+
+        stage('推送ruoyi-auth镜像') {
+          agent none
+          steps {
+            container('maven') {
+              withCredentials([usernamePassword(credentialsId : 'aliyun-docker-registry' ,passwordVariable : 'DOCKER_PWD_VAR' ,usernameVariable : 'DOCKER_USER_VAR' ,)]) {
+                sh 'echo "$DOCKER_PWD_VAR" | docker login $REGISTRY -u "$DOCKER_USER_VAR" --password-stdin'
+                sh 'docker tag  ruoyi-auth:latest $REGISTRY/$DOCKERHUB_NAMESPACE/ruoyi-auth:SNAPSHOT-$BUILD_NUMBER'
+                sh 'docker push  $REGISTRY/$DOCKERHUB_NAMESPACE/ruoyi-auth:SNAPSHOT-$BUILD_NUMBER'
+              }
+
+            }
+
+          }
+        }
+
+        stage('推送ruoyi-file镜像') {
+          agent none
+          steps {
+            container('maven') {
+              withCredentials([usernamePassword(credentialsId : 'aliyun-docker-registry' ,passwordVariable : 'DOCKER_PWD_VAR' ,usernameVariable : 'DOCKER_USER_VAR' ,)]) {
+                sh 'echo "$DOCKER_PWD_VAR" | docker login $REGISTRY -u "$DOCKER_USER_VAR" --password-stdin'
+                sh 'docker tag  ruoyi-file:latest $REGISTRY/$DOCKERHUB_NAMESPACE/ruoyi-file:SNAPSHOT-$BUILD_NUMBER'
+                sh 'docker push  $REGISTRY/$DOCKERHUB_NAMESPACE/ruoyi-file:SNAPSHOT-$BUILD_NUMBER'
+              }
+
+            }
+
+          }
+        }
+
+        stage('推送ruoyi-job镜像') {
+          agent none
+          steps {
+            container('maven') {
+              withCredentials([usernamePassword(credentialsId : 'aliyun-docker-registry' ,passwordVariable : 'DOCKER_PWD_VAR' ,usernameVariable : 'DOCKER_USER_VAR' ,)]) {
+                sh 'echo "$DOCKER_PWD_VAR" | docker login $REGISTRY -u "$DOCKER_USER_VAR" --password-stdin'
+                sh 'docker tag  ruoyi-job:latest $REGISTRY/$DOCKERHUB_NAMESPACE/ruoyi-job:SNAPSHOT-$BUILD_NUMBER'
+                sh 'docker push  $REGISTRY/$DOCKERHUB_NAMESPACE/ruoyi-job:SNAPSHOT-$BUILD_NUMBER'
+              }
+
+            }
+
+          }
+        }
+
+        stage('推送ruoyi-system镜像') {
+          agent none
+          steps {
+            container('maven') {
+              withCredentials([usernamePassword(credentialsId : 'aliyun-docker-registry' ,passwordVariable : 'DOCKER_PWD_VAR' ,usernameVariable : 'DOCKER_USER_VAR' ,)]) {
+                sh 'echo "$DOCKER_PWD_VAR" | docker login $REGISTRY -u "$DOCKER_USER_VAR" --password-stdin'
+                sh 'docker tag  ruoyi-system:latest $REGISTRY/$DOCKERHUB_NAMESPACE/ruoyi-system:SNAPSHOT-$BUILD_NUMBER'
+                sh 'docker push  $REGISTRY/$DOCKERHUB_NAMESPACE/ruoyi-system:SNAPSHOT-$BUILD_NUMBER'
+              }
+
+            }
+
+          }
+        }
+
+        stage('推送ruoyi-visual镜像') {
+          agent none
+          steps {
+            container('maven') {
+              withCredentials([usernamePassword(credentialsId : 'aliyun-docker-registry' ,passwordVariable : 'DOCKER_PWD_VAR' ,usernameVariable : 'DOCKER_USER_VAR' ,)]) {
+                sh 'echo "$DOCKER_PWD_VAR" | docker login $REGISTRY -u "$DOCKER_USER_VAR" --password-stdin'
+                sh 'docker tag  ruoyi-visual:latest $REGISTRY/$DOCKERHUB_NAMESPACE/ruoyi-visual:SNAPSHOT-$BUILD_NUMBER'
+                sh 'docker push  $REGISTRY/$DOCKERHUB_NAMESPACE/ruoyi-visual:SNAPSHOT-$BUILD_NUMBER'
+              }
+
+            }
+
+          }
+        }
+
+      }
+    }
+
+    stage('default-4') {
+      parallel {
+        stage('ruoyi-gateway 部署到dev环境') {
+          agent none
+          steps {
+            container('maven') {
+              withCredentials([
+                                                                                          kubeconfigFile(
+                                                                                                  credentialsId: env.KUBECONFIG_CREDENTIAL_ID,
+                                                                                                  variable: 'KUBECONFIG')
+                                                                                                  ]) {
+                    sh 'envsubst < ruoyi-gateway/deploy/deploy.yml | kubectl apply -f -'
+                  }
+
+                }
+
+              }
+            }
+
+            stage('ruoyi-auth 部署到dev环境') {
+              agent none
+              steps {
+                container('maven') {
+                  withCredentials([
+                                                                                                  kubeconfigFile(
+                                                                                                          credentialsId: env.KUBECONFIG_CREDENTIAL_ID,
+                                                                                                          variable: 'KUBECONFIG')
+                                                                                                          ]) {
+                        sh 'envsubst < ruoyi-auth/deploy/deploy.yml | kubectl apply -f -'
+                      }
+
+                    }
+
+                  }
+                }
+
+                stage('ruoyi-file 部署到dev环境') {
+                  agent none
+                  steps {
+                    container('maven') {
+                      withCredentials([
+                                                                                                          kubeconfigFile(
+                                                                                                                  credentialsId: env.KUBECONFIG_CREDENTIAL_ID,
+                                                                                                                  variable: 'KUBECONFIG')
+                                                                                                                  ]) {
+                            sh 'envsubst < ruoyi-modules/ruoyi-file/deploy/deploy.yml | kubectl apply -f -'
+                          }
+
+                        }
+
+                      }
+                    }
+
+                    stage('ruoyi-job 部署到dev环境') {
+                      agent none
+                      steps {
+                        container('maven') {
+                          withCredentials([
+                                                                                                                  kubeconfigFile(
+                                                                                                                          credentialsId: env.KUBECONFIG_CREDENTIAL_ID,
+                                                                                                                          variable: 'KUBECONFIG')
+                                                                                                                          ]) {
+                                sh 'envsubst < ruoyi-modules/ruoyi-job/deploy/deploy.yml | kubectl apply -f -'
+                              }
+
+                            }
+
+                          }
+                        }
+
+                        stage('ruoyi-system 部署到dev环境') {
+                          agent none
+                          steps {
+                            container('maven') {
+                              withCredentials([
+                                                                                                                          kubeconfigFile(
+                                                                                                                                  credentialsId: env.KUBECONFIG_CREDENTIAL_ID,
+                                                                                                                                  variable: 'KUBECONFIG')
+                                                                                                                                  ]) {
+                                    sh 'envsubst < ruoyi-modules/ruoyi-system/deploy/deploy.yml | kubectl apply -f -'
+                                  }
+
+                                }
+
+                              }
+                            }
+
+                            stage('ruoyi-visual 部署到dev环境') {
+                              agent none
+                              steps {
+                                container('maven') {
+                                  withCredentials([
+                                                                                                                                  kubeconfigFile(
+                                                                                                                                          credentialsId: env.KUBECONFIG_CREDENTIAL_ID,
+                                                                                                                                          variable: 'KUBECONFIG')
+                                                                                                                                          ]) {
+                                        sh 'envsubst < ruoyi-visual/ruoyi-monitor/deploy/deploy.yml | kubectl apply -f -'
+                                      }
+
+                                    }
+
+                                  }
+                                }
+
+                                  }
+                                }
+
+                              stage('发送确认邮件') {
+                              agent none
+                              steps {
+                                  mail(to: '751536336@qq.com', subject: '构建结果', body: "构建成功了 $BUILD_NUMBER")
+                              }
+                              }
+
+                              }
+                              environment {
+                                DOCKER_CREDENTIAL_ID = 'dockerhub-id'
+                                GITHUB_CREDENTIAL_ID = 'github-id'
+                                KUBECONFIG_CREDENTIAL_ID = 'demo-kubeconfig'
+                                REGISTRY = 'registry.cn-shenzhen.aliyuncs.com'
+                                DOCKERHUB_NAMESPACE = 'ruoyi-my'
+                                GITHUB_ACCOUNT = 'kubesphere'
+                                APP_NAME = 'devops-java-sample'
+                                ALIYUNHUB_NAMESPACE = 'ruoyi-my'
+                              }
+                              parameters {
+                                string(name: 'TAG_NAME', defaultValue: '', description: '')
+                              }
+                            }

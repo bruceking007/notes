@@ -1,0 +1,97 @@
+pipeline {
+  agent {
+    node {
+      label 'nodejs'
+    }
+
+  }
+  stages {
+    stage('拉取代码') {
+      agent none
+      steps {
+        container('nodejs') {
+          git(url: 'https://gitee.com/itsutdy/RuoYi-Cloud.git', credentialsId: 'gitee-id', branch: 'master', changelog: true, poll: false)
+          sh 'ls -al'
+        }
+
+      }
+    }
+
+    stage('项目编译') {
+      agent none
+      steps {
+        container('nodejs') {
+          sh 'node -v'
+          sh 'cd ruoyi-ui && npm install --registry=https://registry.npmmirror.com'
+          sh 'cd ruoyi-ui && npm run build:prod'
+          sh 'ls ruoyi-ui/dist'
+        }
+
+      }
+    }
+
+    stage('构建ruoyi-ui镜像') {
+      agent none
+      steps {
+        container('nodejs') {
+          sh 'ls ruoyi-ui/dist'
+          sh 'docker build -t ruoyi-ui:latest -f ruoyi-ui/Dockerfile ruoyi-ui'
+        }
+
+      }
+    }
+
+    stage('推送ruoyi-ui镜像') {
+      agent none
+      steps {
+        container('nodejs') {
+          withCredentials([usernamePassword(credentialsId : 'aliyun-docker-registry' ,passwordVariable : 'DOCKER_PWD_VAR' ,usernameVariable : 'DOCKER_USER_VAR' ,)]) {
+            sh 'echo "$DOCKER_PWD_VAR" | docker login $REGISTRY -u "$DOCKER_USER_VAR" --password-stdin'
+            sh 'docker tag  ruoyi-ui:latest $REGISTRY/$DOCKERHUB_NAMESPACE/ruoyi-ui:SNAPSHOT-$BUILD_NUMBER'
+            sh 'docker push  $REGISTRY/$DOCKERHUB_NAMESPACE/ruoyi-ui:SNAPSHOT-$BUILD_NUMBER'
+          }
+
+        }
+
+      }
+    }
+
+    stage('ruoyi-ui 部署到dev环境') {
+      agent none
+      steps {
+        container('nodejs') {
+          withCredentials([
+                                                                  kubeconfigFile(
+                                                                        credentialsId: env.KUBECONFIG_CREDENTIAL_ID,
+                                                                        variable: 'KUBECONFIG')
+                                                                        ]) {
+                sh 'envsubst < ruoyi-ui/deploy/deploy.yml | kubectl apply -f -'
+              }
+
+            }
+
+          }
+        }
+
+        stage('deploy to production') {
+          steps {
+            input(id: 'deploy-to-production', message: 'deploy to production?')
+            kubernetesDeploy(configs: 'deploy/prod-ol/**', enableConfigSubstitution: true, kubeconfigId: "$KUBECONFIG_CREDENTIAL_ID")
+          }
+        }
+
+      }
+      environment {
+        DOCKER_CREDENTIAL_ID = 'dockerhub-id'
+        GITHUB_CREDENTIAL_ID = 'github-id'
+        KUBECONFIG_CREDENTIAL_ID = 'demo-kubeconfig'
+        REGISTRY = 'registry.cn-shenzhen.aliyuncs.com'
+        DOCKERHUB_NAMESPACE = 'ruoyi-my'
+        GITHUB_ACCOUNT = 'kubesphere'
+        APP_NAME = 'devops-java-sample'
+        ALIYUNHUB_NAMESPACE = 'ruoyi-my'
+      }
+      parameters {
+        string(name: 'TAG_NAME', defaultValue: '', description: '')
+      }
+    }
