@@ -1,0 +1,12 @@
+FROM openjdk:8-jre
+ENV JAVA_HOME /usr/local/openjdk-8
+ENV CATALINA_HOME /home/java/war-demo
+ENV CATALINA_BASE /home/java/war-demo
+ENV PATH $PATH:$JAVA_HOME/bin:$CATALINA_HOME/lib:$CATALINA_HOME/bin
+RUN mkdir -p /home/java
+ADD war-demo-v1.tar.gz /home/java
+EXPOSE 8080
+WORKDIR /home/java/war-demo/
+CMD /home/java/war-demo/bin/catalina.sh run
+
+
