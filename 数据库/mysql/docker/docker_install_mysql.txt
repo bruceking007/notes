@@ -1,0 +1,17 @@
+docker pull mysql:5.7
+
+docker run -p 3307:3306 --name master   -d  -v mysql_conf_3307:/etc/mysql/mysql.conf.d/ -v mysql_log_3307:/var/log  --net extnetwork --ip 172.20.0.7 -e MYSQL_ROOT_PASSWORD=123456  c20987f18b13 
+
+docker run -p 3308:3306 --name slave   -d  -v mysql_conf_3308:/etc/mysql/mysql.conf.d/ -v mysql_log_3308:/var/log  --net extnetwork --ip 172.20.0.8  -e MYSQL_ROOT_PASSWORD=123456  c20987f18b13 
+
+
+主从
+
+master
+GRANT REPLICATION SLAVE ON *.* TO 'slave'@'%' identified by '123456';
+FLUSH PRIVILEGES;
+
+slave
+change master to master_host='172.20.0.7', master_user='slave',master_password='123456',master_port=3306,master_auto_position=1;
+start slave
+show slave status\G
