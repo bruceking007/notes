@@ -1,0 +1,132 @@
+【下载部署】
+cd /usr/local/src && wget https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-rhel62-4.0.19.tgz
+tar -xvf mongodb-linux-x86_64-rhel62-4.0.19.tgz
+mv mongodb-linux-x86_64-rhel62-4.0.19 /usr/local/ && cd /usr/local/ &&  ln -sv mongodb-linux-x86_64-rhel62-4.0.19 mongodb
+mkdir -p /data/mongodb && cd /data/mongodb/
+mkdir /data/mongodb/{data,log}
+ln -sv /usr/local/mongodb/bin/* /usr/bin/
+
+
+【配置文件修改】
+cat > /data/mongodb/mongodb.conf <<EOF
+dbpath=/data/mongodb/data
+logpath=/data/mongodb/log/mongodb.log
+logappend=true
+port=27129
+fork=true
+auth=true 
+bind_ip=0.0.0.0
+EOF
+
+【启动】
+mongod -f /data/mongodb/mongodb.conf
+
+【关闭】
+mongod  --shutdown -f /data/mongodb/mongodb.conf
+
+【连接】
+mongo 127.0.0.1:27129
+mongo 127.0.0.1:27129 -u root -p kkxx@nb.com --authenticationDatabase admin
+
+
+【创建管理员账户】
+use admin
+db.createUser({ user:  "root", pwd:  "kkxx@nb.com", roles:  [{ role:  "userAdminAnyDatabase", db:  "admin"  }]  })
+db.auth("root","kkxx@nb.com")
+db.grantRolesToUser ( "root", [ { role: "__system", db: "admin" } ] ) #授权给admin用户对system.version表执行命令的权限
+
+
+创建一个名为 admin，密码为 123456 的用户。
+db.createUser({ user:'admin',pwd:'123456',roles:[ { role:'userAdminAnyDatabase', db: 'admin'},"readWriteAnyDatabase"]});
+https://www.modb.pro/db/57335
+
+【其他账号】
+创建行情集合&账户
+use bitrade 
+db.createUser({ user:  "bituser987", pwd:  "kkxxbit@nb.com", roles:  [{ role:  "dbOwner", db:  "bitrade"  }]  }) 
+
+创建钱包集合&账户
+use wallet 
+db.createUser({ user:  "bituser987", pwd:  "kkxxbit@nb.com", roles:  [{ role:  "dbOwner", db:  "wallet"  }], mechanisms :  ["SCRAM-SHA-1"]  }) 
+
+创建机器人集合&账户
+use robot 
+db.createUser({ user:  "bituser987", pwd:  "kkxxbit@nb.com", roles:  [{ role:  "dbOwner", db:  "robot"  }]  }) 
+db.auth("bituser987","kkxxbit@nb.com") 
+
+
+[root@iZj6c4av1f9xlokfl9erjdZ ~ 14:43:19&&8]#mongo 127.0.0.1:27129
+MongoDB shell version v4.0.19
+connecting to: mongodb://127.0.0.1:27129/test?gssapiServiceName=mongodb
+Implicit session: session { "id" : UUID("eaa30435-cfcd-40a4-a3f4-9bd24ef22beb") }
+MongoDB server version: 4.0.19
+Welcome to the MongoDB shell.
+For interactive help, type "help".
+For more comprehensive documentation, see
+	http://docs.mongodb.org/
+Questions? Try the support group
+	http://groups.google.com/group/mongodb-user
+> use admin
+switched to db admin
+> db.createUser({ user:  "root", pwd:  "kkxx@nb.com", roles:  [{ role:  "userAdminAnyDatabase", db:  "admin"  }]  })
+Successfully added user: {
+	"user" : "root",
+	"roles" : [
+		{
+			"role" : "userAdminAnyDatabase",
+			"db" : "admin"
+		}
+	]
+}
+> db.auth("root","kkxx@nb.com")
+1
+
+> db.system.version.findOne({"_id" : "authSchema"})
+> show dbs
+> show collections
+---------------------------------
+> use bitrade
+switched to db bitrade
+> 
+> db.createUser({ user:  "bituser987", pwd:  "kkxxbit@nb.com", roles:  [{ role:  "dbOwner", db:  "bitrade"  }]  })
+Successfully added user: {
+	"user" : "bituser987",
+	"roles" : [
+		{
+			"role" : "dbOwner",
+			"db" : "bitrade"
+		}
+	]
+}
+-----------------------------
+> use wallet 
+switched to db wallet
+> db.createUser({ user:  "bituser987", pwd:  "kkxxbit@nb.com", roles:  [{ role:  "dbOwner", db:  "wallet"  }], mechanisms :  ["SCRAM-SHA-1"]  }) 
+Successfully added user: {
+	"user" : "bituser987",
+	"roles" : [
+		{
+			"role" : "dbOwner",
+			"db" : "wallet"
+		}
+	],
+	"mechanisms" : [
+		"SCRAM-SHA-1"
+	]
+}
+----------------------------
+> use robot 
+switched to db robot
+> db.createUser({ user:  "bituser987", pwd:  "kkxxbit@nb.com", roles:  [{ role:  "dbOwner", db:  "robot"  }]  }) 
+Successfully added user: {
+	"user" : "bituser987",
+	"roles" : [
+		{
+			"role" : "dbOwner",
+			"db" : "robot"
+		}
+	]
+}
+> db.auth("bituser987","kkxxbit@nb.com") 
+1
+> 

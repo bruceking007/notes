@@ -1,0 +1,37 @@
+【全库备份】
+mongodump -h 127.0.0.1:27129 -u root -p kkxx@nb.com --authenticationDatabase admin  -o /data/backup/mongoDB 
+
+【恢复数据】一个一个数据库恢复
+先要启动mongo
+创建相关用户
+【创建管理员账户】
+use admin
+db.createUser({ user:  "root", pwd:  "kkxx@nb.com", roles:  [{ role:  "userAdminAnyDatabase", db:  "admin"  }]  })
+db.auth("root","kkxx@nb.com")
+db.grantRolesToUser ( "root", [ { role: "__system", db: "admin" } ] ) #授权给admin用户对system.version表执行命令的权限
+
+
+【其他用户】
+use wallet 
+db.createUser({ user:  "bituser987", pwd:  "kkxxbit@nb.com", roles:  [{ role:  "dbOwner", db:  "wallet"  }], mechanisms :  ["SCRAM-SHA-1"]  }) 
+
+【恢复命令】mongorestore -h IP:端口 -u 用户名 -p 密码 -d 数据库 文件存在路径
+mongorestore -h 127.0.0.1:27229 -u bituser987 -p kkxxbit@nb.com  -d wallet /data/backup/mongoDB/wallet/ 
+
+
+#恢复全部数据库
+mongorestore -h 127.0.0.1:27229 -u root -p kkxx@nb.com --authenticationDatabase "admin" --noIndexRestore  /data/backup/mongoDB/
+#恢复单个数据库
+mongorestore -h 127.0.0.1:27229 -u root -p kkxx@nb.com --authenticationDatabase "admin" --noIndexRestore -d dbname  /data/backup/mongoDB/
+
+【gzip方式】
+mongodump -h 127.0.0.1:27129 -u root -p kkxx@nb.com --authenticationDatabase admin  --gzip --archive=/data/backup/mongoDB.gz  #备份
+mongorestore -h 127.0.0.1:27229 -u root -p kkxx@nb.com --authenticationDatabase "admin" --gzip --archive=/data/backup/mongoDB.gz #恢复
+
+
+
+--noIndexRestore参数：恢复数据时不创建索引,导入数据的时候，必须--noIndexRestore否则会报错 索引已存在
+
+============================================
+mongoexport
+mongoimport
