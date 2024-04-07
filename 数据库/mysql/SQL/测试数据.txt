@@ -1,0 +1,5 @@
+【1】
+https://github.com/datacharmer/test_db
+git clone https://github.com/datacharmer/test_db.git
+
+mysql < employees.sql

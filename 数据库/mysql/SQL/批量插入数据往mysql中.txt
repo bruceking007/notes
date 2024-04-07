@@ -1,0 +1,25 @@
+一、创建建表语句
+=============================================
+学生表：Student(Sno,Sname,Ssex,Sage,Sdept)
+------(学号-主键，姓名，性别，年龄，所在系)
+=============================================
+
+create table student(
+Sno int(10) NOT NULL COMMENT '学号',
+Sname varchar(16) NOT NULL COMMENT '姓名',
+Ssex char(2) NOT NULL COMMENT '性别',
+Sage tinyint(2)  NOT NULL default '0' COMMENT '学生年龄',
+Sdept varchar(16)  default NULL  COMMENT '学生所在系别', 
+PRIMARY KEY  (Sno) 
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+二、批量插入数据脚本
+#!/bin/bash
+MysqlLogin="mysql -uroot -p123"
+i=1
+while true
+do
+ ${MysqlLogin} -e "insert into test.student values ("$i",'zls"$i"','m','21','computer"$i"');"
+ ((i++))
+ sleep 2;
+done
