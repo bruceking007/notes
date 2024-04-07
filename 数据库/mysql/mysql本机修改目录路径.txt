@@ -1,0 +1,34 @@
+【方式1】所有东西都拷贝到另一个目录
+ps -ef|grep mysql
+service mysql stop
+ps -ef|grep mysql
+mkdir /data
+mv /usr/local/mysql /data/
+sed 's#/usr/local#/data#g' /etc/my.cnf
+sed -i 's#/usr/local#/data#g' /etc/my.cnf
+sed -i 's#/usr/local#/data#g' /etc/init.d/mysqld  #修改启动脚本路径
+sed -i 's#/usr/local#/data#g' /etc/profile  #修改profile
+source /etc/profile
+service mysql start
+
+Starting MySQL..... ERROR! The server quit without updating PID file (/data/mysql/run/mysql.pid).
+
+cd /data/mysql/binlogs && rm -f mysql-bin.index && service mysql start
+
+
+
+
+
+
+【方式2】只拷贝数据目录
+只更改datadir
+ps -ef|grep mysql
+service mysql stop
+ps -ef|grep mysql
+mkdir -pv /data/mysql
+mv /usr/local/mysql/data /data/mysql/
+sed 's#datadir = \/usr\/local#datadir = \/data#g' /etc/my.cnf
+sed -i 's#datadir = \/usr\/local#datadir = \/data#g' /etc/my.cnf
+service mysql start
+
+

@@ -1,0 +1,8 @@
+docker run -d --name db-01 \
+-p 3306:3306 \
+-e MYSQL_ROOT_PASSWORD=123.com \
+-v /etc/localtime:/etc/localtime \
+-v mysql01_conf:/etc/mysql/conf.d \
+-v mysql01_data:/var/lib/mysql \
+-v mysql01_logs:/var/log \
+mysql:5.7.32

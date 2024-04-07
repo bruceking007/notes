@@ -1,0 +1,14 @@
+G,g7Fd%EfKhG
+
+29)innodb_io_capacity_max
+
+
+
+38)innodb_flush_neighbors
+39)innodb_log_file_size
+41)innodb_purge_threads
+42)innodb_large_prefix
+43)innodb_thread_concurrency
+66)slave_skip_errors
+67)innodb_buffer_pool_dump_pct
+68)innodb_page_cleaners=8

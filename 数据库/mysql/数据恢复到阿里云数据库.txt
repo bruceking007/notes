@@ -1,0 +1,27 @@
+【导出】
+导出自建数据库的数据
+mysqldump -h 127.0.0.1 -u root -p --opt --default-character-set=utf8 --hex-blob <自建数据库名> --skip-triggers --skip-lock-tables > /tmp/<自建数据库名>.sql
+
+导出存储过程、触发器和函数
+mysqldump -h 127.0.0.1 -u root -p --opt --default-character-set=utf8 --hex-blob <自建数据库名> -R | sed -e 's/DEFINER[ ]*=[ ]*[^*]*\*/\*/' > /tmp/<自建数据库名>Trigger.sql
+
+【导入】
+mysql -h <RDS实例连接地址> -P <RDS实例端口> -u <RDS实例账号> -p <RDS数据库名称> < /tmp/<自建数据库名>.sql
+mysql -h <RDS实例连接地址> -P <RDS实例端口> -u <RDS实例账号> -p <RDS数据库名称> < /tmp/<自建数据库名>Trigger.sql
+
+
+mysqldump -h 127.0.0.1 -u root -p --opt --default-character-set=utf8 --socket=/usr/local/mysql/run/mysql.sock --hex-blob  --skip-triggers --skip-lock-tables > /tmp/all.sql
+
+
+
+===例子
+【导出】
+mysqldump -h 127.0.0.1 -u root -p --opt --default-character-set=utf8 --socket=/usr/local/mysql/run/mysql.sock --hex-blob --all-databases --skip-triggers --skip-lock-tables > /tmp/all.sql
+
+mysqldump -h 127.0.0.1 -u root -p --opt --default-character-set=utf8 --socket=/usr/local/mysql/run/mysql.sock --hex-blob --all-databases -R | sed -e 's/DEFINER[ ]*=[ ]*[^*]*\*/\*/' > /tmp/all-Trigger.sql
+	
+	
+	
+【导入】
+mysql -h rm-wz97v1276jg9ownczeo.mysql.rds.aliyuncs.com -P 3306 -u root -p  < /tmp/all.sql
+mysql -h rm-wz97v1276jg9ownczeo.mysql.rds.aliyuncs.com -P 3306 -u root -p < /tmp/all-Trigger.sql

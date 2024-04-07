@@ -1,0 +1,60 @@
+【1】开启screen
+screen -S mysql-rec
+
+【2】创建日期目录
+screen -r mysql-rec
+mkdir -pv /data/dbbackup/210709
+
+【3】将备份的gz包解压至步骤2的日期目录
+tar xf 2021-07-09_22-10-44_full.tar.gz -C /data/dbbackup/210709/
+
+【4】执行恢复脚本
+sh recoverMysql.sh
+按提示操作
+
++-------recoverMysql-------+
+|1、 全量恢复              |
+|2、 增量恢复              |
+===========================|
+|[Q|q|quit] to quit        |
++--------------------------+
+ -->【请选择你要执行的选项编号!】 1 
+total 0
+drwxr-xr-x 3 root root 33 Dec 27 17:22 210709
+drwxr-x--- 3 root root 33 Dec 27 17:18 211227
+drwxr-xr-x 2 root root 68 Dec 27 17:18 logs
+drwxr-xr-x 2 root root 45 Dec 27 17:17 tarfiles
+ -->【请输入恢复时间的日期!】 210709
+total 4
+drwxr-x--- 16 root root 4096 Dec 27 17:43 2021-07-09_22-10-44
+ -->【请输入恢复时间的目录名称!】 2021-07-09_22-10-44
+ 
+【5】启动mysql
+service mysql start
+
+【6】连接报错
+[root@localhost /tmp 18:06:54&&59]#mysql -uroot  -p --socket=/data/mysql/run/mysql.sock
+Enter password: 
+ERROR 1045 (28000): Access denied for user 'root'@'localhost' (using password: YES)
+
+6.1 停止mysql
+service mysql stop
+
+6.2 进入mysql安装目录bin/ 使用safe模式，进行重启
+mysqld_safe --skip-grant-tables
+
+
+6.3 再次连接 mysql -uroot  -p --socket=/data/mysql/run/mysql.sock 可以进入
+use mysql
+flush privileges;
+alter user 'root'@'localhost' identified by '123.com';
+grant all privileges on *.* to'root'@'%' identified by '123.com';
+flush privileges;
+
+6.4 再次重启mysql
+service mysql stop
+service mysql start
+
+6.5 最后可以正常连接
+mysql -uroot  -p --socket=/data/mysql/run/mysql.sock
+
