@@ -1,0 +1,14 @@
+version: '3.1'
+services:
+  kafka-manager:
+    image: sheepkiller/kafka-manager
+    restart: always
+    hostname: kafka-manager
+    container_name: kafka-manager
+    ports:
+      - 9000:9000
+    environment:
+      ZK_HOSTS: 192.168.31.21:2181,192.168.31.22:2181,192.168.31.23:2181
+      KAFKA_BROKERS: 192.168.31.21:9092,192.168.31.22:9092,192.168.31.23:9092
+      APPLICATION_SECRET: letmein
+      KM_ARGS: -Djava.net.preferIPv4Stack=true
