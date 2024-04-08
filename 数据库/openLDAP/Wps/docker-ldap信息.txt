@@ -1,0 +1,13 @@
+cn=sunadmin,dc=sun,dc=com
+admin.88.nb
+
+slappasswd -s admin.88.nb
+olcRootPW: {SSHA}WV9JHcWLOq1diMiLX+Ok99bGO5VNj7Gi
+
+docker run -d --name openldap \
+-v /sys/fs/cgroup:/sys/fs/cgroup \
+-v ldapdata:/var/lib/ldap \
+-v ldapconfig:/etc/openldap/slapd.d \
+-v ldaplog:/var/log/slapd \
+-p 636:636 -p 389:389 -p 8089:80  \
+--privileged=true  openldap:v1  /usr/sbin/init

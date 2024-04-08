@@ -1,0 +1,32 @@
+https://github.com/osixia/docker-openldap
+https://github.com/osixia/docker-phpLDAPadmin
+
+
+mkdir -pv /data/ldap/{slapd.d,ldap,log}
+
+docker run -dit \
+-p 389:389 -p 636:636 \
+-v /data/ldap/log:/var/log \
+-v /data/ldap/ldap:/var/lib/ldap \
+-v /data/ldap/slapd.d:/etc/ldap/slapd.d \
+--name ldap \
+--env LDAP_TLS=false \
+--env LDAP_ORGANISATION="example" \
+--env LDAP_DOMAIN="example.com" \
+--env LDAP_ADMIN_PASSWORD="123.com" \
+--env LDAP_CONFIG_PASSWORD="123.com" \
+--restart always \
+--detach osixia/openldap
+
+docker run -dit \
+-p 80:80 \
+--link ldap \
+--name ldap_mgr \
+--env PHPLDAPADMIN_HTTPS=false \
+--env PHPLDAPADMIN_LDAP_HOSTS=ldap \
+--restart always \
+--detach osixia/phpldapadmin
+
+
+
+cn=admin,dc=example,dc=com
