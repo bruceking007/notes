@@ -1,0 +1,111 @@
+$remote_addr  #客户端的ip地址  $1
+$remote_user  #用于记录远程客户端的用户名称 $3
+$time_local   #用于记录访问时间和时区 $4
+$request      #用于记录请求的url以及请求方法（完整的原始请求行，如 "GET / HTTP/1.1"）$6 $7 $8
+$scheme://$host$request_uri #$scheme HTTP方法、$host #请求主机头字段，否则为服务器名称。$request_uri #包含请求参数的原始URI，不包含主机名，如：”/foo/bar.php?arg=baz”。$9
+$status #响应状态码 $10
+$body_bytes_sent #给客户端发送的文件主体内容字节数 $11
+$http_referer #可以记录用户是从哪个链接访问过来的  $12
+$http_user_agent #用户所使用的浏览器信息 $13
+$connection	#连接序列号 $25
+$upstream_addr #后端服务器的IP地址 $26
+$upstream_response_time #用于接收来自上游服务器的响应的时间 $28
+$request_time #指的是从接受用户请求的第一个字节到发送完响应数据的时间，即$request_time包括接收客户端请求数据的时间、后端程序响应的时间、发送响应数据给客户端的时间 $30
+$request_body #记录POST数据 $31
+$clientRealIp #用户真实IP $32
+
+
+$2 -
+$5 +0800]  
+$6 "GET
+$8 HTTP/1.1
+
+        log_format main '$remote_addr - $remote_user [$time_local] "$request $scheme://$host$request_uri" '
+                    '$status $body_bytes_sent "$http_referer" '
+                    '"$http_user_agent"' ' $connection $upstream_addr '
+                    'ups_time $upstream_response_time req_time $request_time' 
+                    ' $request_body' ' $clientRealIp';
+					
+【日志分析】
+1、根据访问IP统计UV
+awk '{print $NF}' access.log | sort -n | uniq | wc -l
+
+2、统计访问IP前十
+awk '{print $NF}' access.log | sort | uniq -c | sort -nr | head -10
+
+3、查看某一时间段的IP访问量(1-8点)
+awk '$4 >="[15/Dec/2021:15:06:33" && $4 <="[15/Dec/2021:15:49:59"' access.log | awk '{print $1}' | sort | uniq -c| sort -nr |wc -l
+
+4、统计指定某一天的访问IP
+grep "15/Dec/2021" access.log | awk '{print $NF}' | sort | uniq -c | sort -nr | head -10
+
+5、查看访问100次以上的IP
+awk '{print $NF}' access.log | sort -n |uniq -c |awk '{if($NF >100) print $0}'|sort -rn
+
+6、查看指定ip访问过的url和访问次数
+grep "192.168.91.1" access.log|awk '{print $7}' |sort |uniq -c |sort -n -k 1 -r
+
+7、根据访问URL统计PV
+cat access.log |awk '{print $7}' |wc -l
+
+8、查询访问最频繁的URL(前10)
+awk '{print $7}' access.log | sort |uniq -c | sort -rn | head -n 10
+
+9、查看访问最频的URL([排除/api/appid])(前10)
+grep -v '/api/appid' access.log|awk '{print $7}' | sort |uniq -c | sort -rn | head -n 10
+
+10、查看页面访问次数超过100次的页面
+cat access.log | cut -d ' ' -f 7 | sort |uniq -c | awk '{if ($NF > 100) print $0}' | less
+
+11、查看最近1000条记录，访问量最高的页面
+tail -1000 access.log |awk '{print $7}'|sort|uniq -c|sort -nr|less
+
+12、统计每小时的请求数,top10的时间点(精确到小时)
+awk '{print $4}' access.log |cut -c 14-15|sort|uniq -c|sort -nr|head -n 10
+
+13、统计每分钟的请求数,top10的时间点(精确到分钟)
+awk '{print $4}' access.log |cut -c 14-18|sort|uniq -c|sort -nr|head -n 10
+
+14、统计每秒的请求数,top10的时间点(精确到秒)
+awk '{print $4}' access.log |cut -c 14-21|sort|uniq -c|sort -nr|head -n 10
+
+15、查找指定时间段的日志
+awk '$4 >="[15/Dec/2021:15:06:33" && $4 <="[15/Dec/2021:15:49:59"' access.log 
+
+16、列出传输时间超过 0.6 秒的url，显示前10条
+cat access.log |awk '(substr($(NF-2),1,5) > 0.6){print $4,$7,substr($(NF-2),1,5)}' | awk -F '"' '{print $1,$2,$3}' |sort -k3 -rn | head -10
+cat access.log |awk '($(NF-2) > 0.6){print $4,$7,$(NF-2)}' | awk -F '"' '{print $1,$2,$3}' |sort -k3 -rn | head -10
+17、列出/api/appid请求时间超过0.6秒的时间点
+cat access.log |awk '(substr($(NF-2),1,5) > 0.6 && $7~/\/api\/appid/){print $4,$7,substr($(NF-2),1,5)}' | awk -F '"' '{print $1,$2,$3}' |sort -k3 -rn | head -10
+
+18、获取前10条最耗时的请求时间、url、耗时
+cat access.log |awk '{print $4,$7,substr($(NF-2),1,5)}' | awk -F '"' '{print $1,$2,$3}' | sort -k3 -rn | head -10
+
+
+19、过滤URL
+awk '{print $9}' access.log | sort | uniq -c | sort -nr | head -10
+
+20、统计指定资源
+awk '($7~/\.jpg$/){print $NF " " $7 " " $10}' access.log #处理第7个字段以'.jpg'结尾的行
+192.168.91.1 /yuantu26.jpg 304
+192.168.91.1 /yuantu26.jpg 304
+192.168.91.1 /yuantu26.jpg 304
+192.168.91.1 /yuantu26.jpg 304
+192.168.91.1 /yuantu26.jpg 304
+
+21、过滤指定时间后的日志并打印IP
+awk '($4>"[15/Dec/2021:15:06:34"){print $NF}' access.log | sort | uniq -c | sort -nr
+
+22、统计流量
+grep "15/Dec/2021" access.log | awk '{sum+=$11}END{print sum}'
+
+23、统计状态码
+awk '{print $10}' access.log | sort | uniq -c | sort -nr | head -10
+
+24、过滤某个时间段的日志
+sed -n '/2021-12-15 15:06:34/,/2021-12-15 15:50:02/p' access.log
+
+
+【参考url】
+https://blog.csdn.net/huahao1989/article/details/106483849
+https://www.cnblogs.com/keithtt/p/6867019.html

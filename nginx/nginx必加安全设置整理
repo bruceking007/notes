@@ -1,0 +1,59 @@
+#####【basic setting start】#####    
+	charset utf-8;
+	set $flag 0;
+    if ($host ~* "\d+\.\d+\.\d+\.\d+"){
+        set $flag "${flag}1";
+    }
+
+    if ($request_uri = "/tclearcache"){
+        set $flag "${flag}2";
+    }
+
+    #只允许域名访问,01即匹配${flag}1，若为IP返回444.
+    if ($flag = "01"){
+        return 444;
+    }
+
+    server_tokens   off; #隐藏版本信息
+    proxy_hide_header        X-Powered-By;
+
+    add_header Content-Security-Policy "default-src 'self' *.wetm.top 'unsafe-inline' 'unsafe-eval' blob: data: ;"; #避免被使用如 XSS，SQL注入等手段进行攻击
+    add_header X-Xss-Protection "1;mode=block"; #启用XSS过滤
+    add_header X-Content-Type-Options nosniff; #Content-Type资源真正类型的猜测行为，nosniff 表示不允许任何猜测
+    add_header X-Frame-Options "SAMEORIGIN"; #SAMEORIGIN只允许本网站的嵌套
+
+    #限制可用的请求方法
+    if ($request_method !~ ^(GET|HEAD|POST)$ ) {
+        return    444;
+    }
+
+    #拒绝一些User-Agents
+    if ($http_user_agent ~* "java|python|perl|ruby|curl|bash|echo|uname|base64|decode|md5sum|select|concat|httprequest|httpclient|nmap|scan" ) {
+        return 403;
+    }
+
+    #url参数过滤敏感字1
+    if ($query_string ~* "union.*select.*\(") {   
+        rewrite ^/(.*)$  $host  permanent;  
+    }   
+
+	#url参数过滤敏感字2
+    if ($query_string ~* "concat.*\(") {   
+        rewrite ^/(.*)$  $host  permanent;  
+    }   
+
+    #禁止下载以点开头的文件
+    location ~ /\..+ {
+        deny all;
+    }
+
+    #禁用扩展名
+    location ~* \.(bak|save|sh|sql|mdb|svn|git|old|txt|doc|gz)$ {
+        rewrite ^/(.*)$  $host  permanent;
+    }
+
+	#知名程序,比如phpmyadmin
+    location /(admin|phpadmin|status) {
+        deny all;
+    }
+#####【basic setting end】##### 

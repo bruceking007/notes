@@ -1,0 +1,74 @@
+【第一步：设置白名单】
+/usr/local/nginx/conf/realwhiteip.conf; 
+白名单的配置文件格式为：
+114.224.23.54 0; #白名单为0
+#114.224.23.55 1; #黑名单为1
+
+【第二步：获取用户真实ip和所有限制的ip。】
+配置文件/usr/local/nginx/conf/nginx.conf
+-----------------------
+#IP 限制（同样适用于有配置CDN的域名）
+#1、获取真实的用户ip
+   map $http_x_forwarded_for  $clientRealIp {  
+     "" $remote_addr;
+     ~^(?P<firstAddr>[0-9\.]+),?.*$  $firstAddr;
+    }
+
+#2、配置白名单ip的值为0，其他ip值为1
+    geo  $clientRealIp $whiteiplist  {
+     default 1;
+     include realwhiteip.conf;
+    }
+
+#3、获取所有限制的ip
+    map $whiteiplist  $limit {
+     1 $clientRealIp;
+     0 "";
+    }
+-------------------------
+针对1、获取真实的用户ip，作个说明
+经过CDN后，获取用户真实IP的方法
+一般CDN都会传递X-Forwarded-For请求头，通过X-Forwarded-For请求头获取用户真实IP。
+后端Nginx配置
+    http {
+        map $http_x_forwarded_for  $clientRealIp {
+        ""      $remote_addr;
+        ~^(?P<firstAddr>[0-9\.]+),?.*$  $firstAddr;
+    }       
+我们通过map自定义了一个变量$clientRealIp；
+如果X-Forwarded-For头是空的，那么客户端真实IP就是remote_addr；
+如果X-Forwarded-For头非空，我们就通过正则匹配，捕获到第一段，这就是用户的真实IP；
+必须注意的是，在每一层代理都要设置X-Forwarded-For头。
+参考url https://www.cnblogs.com/zhaojonjon/p/7293977.html
+
+## 用正则匹配，从 x_forwarded_for 中取得用户的原始IP
+## 例如 X-Forwarded-For: 202.123.123.11, 208.22.22.234, 192.168.2.100,...
+## 这里第一个 202.123.123.11 是用户的真实 IP，后面其它都是经过的 CDN 服务器
+## 通过 map 指令，我们为 nginx 创建了一个变量 $clientRealIp ，这个就是 原始用户的真实 IP 地址，
+## 不论用户是直接访问，还是通过一串 CDN 之后的访问，我们都能取得正确的原始IP地址
+	
+	
+【第三步：配置相对应的location】           
+			
+			
+    location / {
+            if ($clientRealIp = $limit)     #当用户真实的ip和受限制的ip相同时返回503,也就是realwhiteip.conf中ip值为1，或者未添加的ip白名单。
+            { 
+                return 503;
+                break;
+            }
+            root   /var/www/web;
+            try_files $uri $uri/ @router;
+            index  index.html index.htm;
+    }
+
+
+注意，每次添加修改IP要重新reload配置，使其生效。
+参考url:http://blog.sina.com.cn/s/blog_8f2ef1220102vsd1.html nginx配置通过cdn网络访问后ip鉴权问题问题详细配置
+
+
+        log_format main '$remote_addr - $remote_user [$time_local] "$request $scheme://$host$request_uri" '
+                    '$status $body_bytes_sent "$http_referer" '
+                    '"$http_user_agent"' ' $connection $upstream_addr '
+                    'ups_time $upstream_response_time req_time $request_time'
+                    ' $request_body' ' $clientRealIp';

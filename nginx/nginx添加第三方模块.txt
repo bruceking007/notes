@@ -1,0 +1,94 @@
+1、下载模块
+以添加ModSecurity(2.9.3)为例
+cd /usr/local && wget http://www.modsecurity.cn/download/modsecurity/modsecurity-2.9.3.tar.gz
+tar -zxvf modsecurity-2.9.3.tar.gz
+cd modsecurity-2.9.3
+./configure --enable-standalone-module --disable-mlogc
+make
+
+2、查看已编译参数
+/usr/local/nginx/sbin/nginx -V
+=============
+configure arguments: --prefix=/usr/local/nginx --pid-path=/var/run/nginx.pid --error-log-path=/data/nginx/logs/error.log --http-log-path=/data/nginx/logs/access.log --with-pcre=/usr/local/src/nginx/pcre-8.36 --with-openssl=/usr/local/src/nginx/openssl-1.0.2 --with-openssl-opt=-fPIC --with-http_lua_module --with-luajit-inc=/usr/local/include/luajit-2.0 --with-luajit-lib=/usr/local/lib --with-backtrace_module --with-http_stub_status_module --with-http_gzip_static_module --with-http_realip_module --with-http_upstream_check_module --with-http_ssl_module --with-http_sub_module --with-md5=/usr/lib --with-http_concat_module=shared --with-http_sysguard_module=shared --with-http_limit_conn_module=shared --with-http_limit_req_module=shared --with-http_split_clients_module=shared --with-http_footer_filter_module=shared --with-http_sub_module=shared --with-http_access_module=shared --with-http_upstream_ip_hash_module=shared --with-http_upstream_least_conn_module=shared --with-http_addition_module=shared --with-http_referer_module=shared --with-http_rewrite_module=shared --with-http_memcached_module=shared --with-http_upstream_session_sticky_module=shared --with-http_addition_module=shared --with-http_xslt_module=shared --with-http_image_filter_module=shared --with-http_user_agent_module=shared --with-http_empty_gif_module=shared --with-http_browser_module=shared --with-google_perftools_module --with-http_map_module=shared --with-http_split_clients_module=shared --with-http_userid_filter_module=shared --with-http_charset_filter_module=shared --without-http_uwsgi_module --without-http_scgi_module --without-select_module --without-poll_module --add-module=/usr/local/src/nginx/ngx_cache_purge-2.3 --add-module=/usr/local/src/nginx/nginx_tcp_proxy_module-master --add-module=/usr/local/src/nginx/ngx_http_geoip2_module-master --with-ld-opt=-ltcmalloc_minimal --http-client-body-temp-path=/data/nginx/tmps/nginx_client --http-proxy-temp-path=/data/nginx/tmps/nginx_proxy --http-fastcgi-temp-path=/data/nginx/tmps/nginx_fastcgi
+============
+
+3、加入需要安装的模块，重新编译，如这里添加--add-module=/usr/local/modsecurity-2.9.3/nginx/modsecurity
+
+===========
+./configure --prefix=/usr/local/nginx \
+--pid-path=/var/run/nginx.pid \
+--error-log-path=/data/nginx/logs/error.log \
+--http-log-path=/data/nginx/logs/access.log \
+--with-pcre=/usr/local/src/nginx/pcre-8.36 \
+--with-openssl=/usr/local/src/nginx/openssl-1.0.2 \
+--with-openssl-opt=-fPIC \
+--with-http_lua_module \
+--with-luajit-inc=/usr/local/include/luajit-2.0 \
+--with-luajit-lib=/usr/local/lib \
+--with-backtrace_module \
+--with-http_stub_status_module \
+--with-http_gzip_static_module \
+--with-http_realip_module \
+--with-http_upstream_check_module \
+--with-http_ssl_module \
+--with-http_sub_module \
+--with-md5=/usr/lib \
+--with-http_concat_module=shared \
+--with-http_sysguard_module=shared \
+--with-http_limit_conn_module=shared \
+--with-http_limit_req_module=shared \
+--with-http_split_clients_module=shared \
+--with-http_footer_filter_module=shared \
+--with-http_sub_module=shared \
+--with-http_access_module=shared \
+--with-http_upstream_ip_hash_module=shared \
+--with-http_upstream_least_conn_module=shared \
+--with-http_addition_module=shared \
+--with-http_referer_module=shared \
+--with-http_rewrite_module=shared \
+--with-http_memcached_module=shared \
+--with-http_upstream_session_sticky_module=shared \
+--with-http_addition_module=shared \
+--with-http_xslt_module=shared \
+--with-http_image_filter_module=shared \
+--with-http_user_agent_module=shared \
+--with-http_empty_gif_module=shared \
+--with-http_browser_module=shared \
+--with-google_perftools_module \
+--with-http_map_module=shared \
+--with-http_split_clients_module=shared \
+--with-http_userid_filter_module=shared \
+--with-http_charset_filter_module=shared \
+--without-http_uwsgi_module \
+--without-http_scgi_module \
+--without-select_module \
+--without-poll_module \
+--add-module=/usr/local/src/nginx/ngx_cache_purge-2.3 \
+--add-module=/usr/local/src/nginx/nginx_tcp_proxy_module-master \
+--add-module=/usr/local/src/nginx/ngx_http_geoip2_module-master \
+--with-ld-opt=-ltcmalloc_minimal \
+--http-client-body-temp-path=/data/nginx/tmps/nginx_client \
+--http-proxy-temp-path=/data/nginx/tmps/nginx_proxy \
+--http-fastcgi-temp-path=/data/nginx/tmps/nginx_fastcgi \
+--add-module=/usr/local/modsecurity-2.9.3/nginx/modsecurity
+
+make //注意：千万不要make install，不然真的就GG了
+
+4、备份原文件
+cp /usr/local/nginx/sbin/nginx /usr/local/nginx/sbin/nginx.bak
+
+5、替换nginx二进制文件
+cp /usr/local/src/nginx/tengine-2.3.3/objs/nginx /usr/local/nginx/sbin/nginx
+
+6、确认是否已添加第三方模块
+ln -sfv /usr/local/nginx/sbin/nginx /usr/bin/nginx
+nginx -V #再次查看，此时在最末尾可以看到已添加modsecurity-2.9.3模块
+====================
+Tengine version: Tengine/2.1.0 (nginx/1.6.2)
+built by gcc 4.8.5 20150623 (Red Hat 4.8.5-44) (GCC) 
+TLS SNI support enabled
+configure arguments: --prefix=/usr/local/nginx --pid-path=/var/run/nginx.pid --error-log-path=/data/nginx/logs/error.log --http-log-path=/data/nginx/logs/access.log --with-pcre=/usr/local/src/nginx/pcre-8.36 --with-openssl=/usr/local/src/nginx/openssl-1.0.2 --with-openssl-opt=-fPIC --with-http_lua_module --with-luajit-inc=/usr/local/include/luajit-2.0 --with-luajit-lib=/usr/local/lib --with-backtrace_module --with-http_stub_status_module --with-http_gzip_static_module --with-http_realip_module --with-http_upstream_check_module --with-http_ssl_module --with-http_sub_module --with-md5=/usr/lib --with-http_concat_module=shared --with-http_sysguard_module=shared --with-http_limit_conn_module=shared --with-http_limit_req_module=shared --with-http_split_clients_module=shared --with-http_footer_filter_module=shared --with-http_sub_module=shared --with-http_access_module=shared --with-http_upstream_ip_hash_module=shared --with-http_upstream_least_conn_module=shared --with-http_addition_module=shared --with-http_referer_module=shared --with-http_rewrite_module=shared --with-http_memcached_module=shared --with-http_upstream_session_sticky_module=shared --with-http_addition_module=shared --with-http_xslt_module=shared --with-http_image_filter_module=shared --with-http_user_agent_module=shared --with-http_empty_gif_module=shared --with-http_browser_module=shared --with-google_perftools_module --with-http_map_module=shared --with-http_split_clients_module=shared --with-http_userid_filter_module=shared --with-http_charset_filter_module=shared --without-http_uwsgi_module --without-http_scgi_module --without-select_module --without-poll_module --add-module=/usr/local/src/nginx/ngx_cache_purge-2.3 --add-module=/usr/local/src/nginx/nginx_tcp_proxy_module-master --add-module=/usr/local/src/nginx/ngx_http_geoip2_module-master --with-ld-opt=-ltcmalloc_minimal --http-client-body-temp-path=/data/nginx/tmps/nginx_client --http-proxy-temp-path=/data/nginx/tmps/nginx_proxy --http-fastcgi-temp-path=/data/nginx/tmps/nginx_fastcgi --add-module=/usr/local/modsecurity-2.9.3/nginx/modsecurity
+=========================
+7、检查以及平滑启动nginx
+nginx -t
+nginx -s reload
