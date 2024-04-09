@@ -1,0 +1,36 @@
+docker pull klwang/oracle10g #下载镜像
+docker images #查看镜像
+docker run -d -p 1521:1521 -v /data/oracle10g:/data/oracle --privileged --name oracle10g klwang/oracle10g #运行镜像
+#其中-d表示后台运行，这样退出终端docker容器不会挂掉，--name给容器起一个名字
+docker exec -it oracle10g bash #进入容器
+#-i表示交互方式，t表示终端
+ 
+#修改密码
+sqlplus /nolog
+connect sys/oracle as sysdba
+# alter user username identified by password;
+alter user system identified by "123456";
+alter user sys identified by "123456";
+
+授权
+grant sysdba to sys;
+
+#创建用户并设置密码 创建一个用户名为oracle10的用户，密码为 123456
+create user oracle10 identified by "123456";
+
+将dba权限授权给内部管理员账号
+grant connect,resource,dba to oracle10;
+
+#oracle密码默认有效期是180天好像，修改密码规则策略为密码永不过期
+ALTER PROFILE DEFAULT LIMIT PASSWORD_LIFE_TIME UNLIMITED;
+
+
+进入容器之后，使用如下命令查看数据库提供监听服务的名字
+lsnrctl status
+
+https://www.freesion.com/article/30581476722/
+https://blog.csdn.net/weixin_30562025/article/details/116389557
+https://blog.csdn.net/sinat_33157758/article/details/103579660
+
+
+# docker run -d -p 1521:1521 -v oracle10g:/data/oracle -v oracle10g-u01-app-oracle:/u01/app/oracle  -v oracle10g-config:/config -v oracle10g-logs:/logs --privileged --name oracle10g klwang/oracle10g

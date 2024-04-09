@@ -1,0 +1,15 @@
+1，***_database_*.zip
+是oracle数据库 服务端 软件的安装包，如果你要创建一个数据库，请下载这个版本
+
+2，***_client_*.zip
+是oracle数据库 客户端 软件的安装包，如果你不需要创建数据库，只是用来操作远程电脑上的数据库时，请下载这个版本
+
+3，***_gateways_*.zip
+oracle透明网关，如果你要链接其他数据库，请下载这个软件包
+
+4，***_clusterware_*.zip
+oracle集群软件，如果你要做RAC，请下载这个软件包
+
+
+https://www.cxybb.com/article/ronsarah/81197688
+https://blog.csdn.net/xiezuoyong/article/details/81197688
