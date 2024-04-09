@@ -1,0 +1,151 @@
+wget https://github.com/pexpect/pexpect/releases/download/3.0/pexpect-3.0.tar.gz
+https://pypi.python.org/packages/68/77/fef8a02cffb7d9387a0de4761b528a409cc9f6c6904c673331a0ce47638a/Fabric-1.14.0.tar.gz
+https://pypi.python.org/packages/c8/de/791773d6a4b23327c7475ae3d7ada0d07fa147bf77fb6f561a4a7d8afd11/paramiko-2.4.0.tar.gz
+
+========================================================================================
+安装psutil模块报错&安装python-devel  
+psutil/_psutil_linux.c:9:20: 错误：Python.h：没有那个文件或目录
+
+In file included from psutil/_psutil_linux.c:19:
+psutil/_psutil_linux.h:11: 错误：expected ‘=’, ‘,’, ‘;’, ‘asm’ or ‘__attribute__’ before ‘*’ token
+psutil/_psutil_linux.h:12: 错误：expected ‘=’, ‘,’, ‘;’, ‘asm’ or ‘__attribute__’ before ‘*’ token
+psutil/_psutil_linux.h:13: 错误：expected ‘=’, ‘,’, ‘;’, ‘asm’ or ‘__attribute__’ before ‘*’ token
+psutil/_psutil_linux.h:14: 错误：expected ‘=’, ‘,’, ‘;’, ‘asm’ or ‘__attribute__’ before ‘*’ token
+psutil/_psutil_linux.h:15: 错误：expected ‘=’, ‘,’, ‘;’, ‘asm’ or ‘__attribute__’ before ‘*’ token
+psutil/_psutil_linux.h:16: 错误：expected ‘=’, ‘,’, ‘;’, ‘asm’ or ‘__attribute__’ before ‘*’ token
+psutil/_psutil_linux.h:17: 错误：expected ‘=’, ‘,’, ‘;’, ‘asm’ or ‘__attribute__’ before ‘*’ token
+psutil/_psutil_linux.c: 在函数‘ioprio_get’中:
+psutil/_psutil_linux.c:32: 警告：隐式声明函数‘syscall’
+psutil/_psutil_linux.c: 在文件层：
+psutil/_psutil_linux.c:52: 错误：expected ‘=’, ‘,’, ‘;’, ‘asm’ or ‘__attribute__’ before ‘*’ token
+psutil/_psutil_linux.c:75: 错误：expected ‘=’, ‘,’, ‘;’, ‘asm’ or ‘__attribute__’ before ‘*’ token
+psutil/_psutil_linux.c:100: 错误：expected ‘=’, ‘,’, ‘;’, ‘asm’ or ‘__attribute__’ before ‘*’ token
+psutil/_psutil_linux.c:150: 错误：expected ‘=’, ‘,’, ‘;’, ‘asm’ or ‘__attribute__’ before ‘*’ token
+psutil/_psutil_linux.c:172: 错误：expected ‘=’, ‘,’, ‘;’, ‘asm’ or ‘__attribute__’ before ‘*’ token
+psutil/_psutil_linux.c:192: 错误：expected ‘=’, ‘,’, ‘;’, ‘asm’ or ‘__attribute__’ before ‘*’ token
+psutil/_psutil_linux.c:213: 错误：expected ‘=’, ‘,’, ‘;’, ‘asm’ or ‘__attribute__’ before ‘*’ token
+psutil/_psutil_linux.c:261: 错误：expected ‘=’, ‘,’, ‘;’, ‘asm’ or ‘__attribute__’ before ‘PsutilMethods’
+psutil/_psutil_linux.c:285: 错误：expected specifier-qualifier-list before ‘PyObject’
+psutil/_psutil_linux.c: 在函数‘init_psutil_linux’中:
+psutil/_psutil_linux.c:335: 错误：‘PyObject’未声明(在此函数内第一次使用)
+psutil/_psutil_linux.c:335: 错误：(即使在一个函数内多次出现，每个未声明的标识符在其
+psutil/_psutil_linux.c:335: 错误：所在的函数内也只报告一次。)
+psutil/_psutil_linux.c:335: 错误：‘module’未声明(在此函数内第一次使用)
+psutil/_psutil_linux.c:335: 警告：隐式声明函数‘Py_InitModule’
+psutil/_psutil_linux.c:335: 错误：‘PsutilMethods’未声明(在此函数内第一次使用)
+error: command 'gcc' failed with exit status 1
+
+===============================================================
+
+解决方法是安装python-devel，这是Python的头文件和静态库包：
+
+1.可以先查看一下含python-devel的包
+
+    yum search python | grep python-devel
+
+2.64位安装python-devel.x86_64，32位安装python-devel.i686，我这里安装:
+
+    sudo yum install python-devel.x86_64
+
+
+参考：
+http://www.cnopenlinux.com/blog/?post=61
+http://jingyan.baidu.com/article/597035521e76ef8fc00740cf.html
+
+=====================================================================================================
+
+
+
+
+
+
+
+
+
+
+
+python安装完毕后，提示找不到ssl模块的解决步骤
+
+python安装完毕后，提示找不到ssl模块：
+[root@localhost ~]# python2.7.5
+Python 2.7.5 (default, Jun 3 2013, 11:08:43) 
+[GCC 4.1.2 20080704 (Red Hat 4.1.2-54)] on linux2
+Type "help", "copyright", "credits" or "license" for more information.
+>>> import ssl
+Traceback (most recent call last):
+File "<stdin>", line 1, in <module>
+File "/usr/local/python27/lib/python2.7/ssl.py", line 60, in <module>
+import _ssl # if we can't import it, let the error propagate
+ImportError: No module named _ssl
+>>>
+
+2. 查看openssl安装包，发现缺少openssl-devel包
+[root@localhost ~]# rpm -aq|grep openssl
+openssl-0.9.8e-20.el5
+openssl-0.9.8e-20.el5
+[root@localhost ~]#
+
+3. yum安装openssl-devel
+[root@localhost ~]# yum install openssl-devel -y
+#查看安装结果
+[root@localhost ~]# rpm -aq|grep openssl
+openssl-0.9.8e-26.el5_9.1
+openssl-0.9.8e-26.el5_9.1
+openssl-devel-0.9.8e-26.el5_9.1
+openssl-devel-0.9.8e-26.el5_9.1
+
+4. 重新编译python
+#修改Setup文件
+vi /usr/software/Python-2.7.5/Modules/Setup
+#修改结果如下：
+# Socket module helper for socket(2)
+_socket socketmodule.c timemodule.c
+
+# Socket module helper for SSL support; you must comment out the other
+# socket line above, and possibly edit the SSL variable:
+#SSL=/usr/local/ssl
+_ssl _ssl.c \
+-DUSE_SSL -I$(SSL)/include -I$(SSL)/include/openssl \
+-L$(SSL)/lib -lssl -lcrypto
+
+
+5. 重新编译
+make
+make install
+
+6. 测试，已可正常使用。
+[root@localhost ~]# python2.7.5
+Python 2.7.5 (default, Jun 3 2013, 14:56:13) 
+[GCC 4.1.2 20080704 (Red Hat 4.1.2-54)] on linux2
+Type "help", "copyright", "credits" or "license" for more information.
+>>> import ssl
+>>>
+
+参考：http://raw.zniper.net/bits/cannot-import-ssl-with-python-2.6
+http://www.cnblogs.com/yuechaotian/archive/2013/06/03/3115472.html
+
+
+==============================================================================
+Python自动化运维工具fabric的安装
+https://www.cnblogs.com/freeweb/p/5445749.html
+
+Linux下默认有python环境，安装fabric有两种方式一种是pip直接安装，另外一种是下载fabric源码，使用setuptools工具执行setup.py安装，两种方式都需要联网，基本上差不多，这里使用pip进行安装，安装的时候如果报错，一般是因为python-devel模块没有安装，需要进行安装，可以提前使用 rpm -qa | grep python-devel 查看是否安装python-devel，如果没有安装，使用yum安装如下：
+
+yum -y install python-devel
+　　pip安装之前说过，首先下载py文件：https://bootstrap.pypa.io/get-pip.py，上传至服务器之后执行： python get-pip.py 安装pip即可
+
+　　使用pip安装fabric： pip install fabric 稍等一会就安装完毕了，这时输入 fab 就会弹出对应的选项
+
+
+
+
+
+=======================-bash: pip: command not found
+
+[root@localhost /home/ptuser 07:56:30&&31]#find / -name pip
+/usr/local/python2.7/bin/pip
+/usr/local/python2.7/lib/python2.7/site-packages/pip
+/root/.cache/pip
+[root@localhost /home/ptuser 07:56:59&&32]#ln -sv /usr/local/python2.7/bin/pip /usr/bin/pip
+"/usr/bin/pip" -> "/usr/local/python2.7/bin/pip"
+[root@localhost /home/ptuser 07:57:29&&33]#pip install fabric

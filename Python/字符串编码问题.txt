@@ -1,0 +1,15 @@
+[Python]解决UnicodeDecodeError: 'ascii' codec can't decode byte 0xe6 in position 0
+原创 2015年01月09日 13:46:57 标签：编码 /unicode /ascii /python 16809
+我的Linux服务器的Python版本是2.*，在将中文encode(UTF-8)的时候出现了UnicodeDecodeError: 'ascii' codec can't decode byte 0xe6 in position 0: ordinal not in range(128)的问题。而在3.*中没有问题。
+
+
+
+解决方法：
+在代码前端加入
+[python] view plain copy
+import sys  
+reload(sys)  
+sys.setdefaultencoding('utf8')  
+
+Python 2.x，字符编码方面，设计的不好。字符串包含两种----->str字符串（此时字符串的编码类型，对应着你的Python文件本身保存为何种编码有关）和unicode字符串
+而在Python 3.*中，字符串则是unicode编码的str。上面这个问题，就是Python2.*渣编码的一个体现
