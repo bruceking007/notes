@@ -1,0 +1,8 @@
+#vim /etc/supervisord.d/tomcat1.ini 
+[program:tomcat1]
+command=/home/java/wm-1/bin/supervisor-wrapper.sh
+autorestart=false
+user=tomcat
+
+
+

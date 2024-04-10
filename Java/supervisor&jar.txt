@@ -1,0 +1,134 @@
+【安装】
+yum install -y supervisor
+systemctl enable supervisord # 开机自启动
+systemctl start supervisord # 启动supervisord服务
+
+【相关目录】
+--supervisor配置文件：/etc/supervisord.conf
+注：supervisor的配置文件默认是不全的，不过在大部分默认的情况下，上面说的基本功能已经满足。
+
+--子进程配置文件路径：/etc/supervisord.d/
+注：默认子进程配置文件为ini格式，可在supervisor主配置文件中修改。
+
+[inet_http_server] #通过网络端口启动的web server 记得此项也要去掉注释，踩坑了。
+port = *:9001  #任何IP可以访问
+username = user
+password = 123
+
+【jar配置】
+[program:rest]
+directory = /home/java/rest/tomcatcode ; 程序的启动目录
+command = /usr/java/jdk/bin/java -jar restclient-1.2.jar ; 启动命令
+autostart = true     ; 在 supervisord 启动的时候也自动启动
+startsecs = 30        ; 启动 30 秒后没有异常退出，就当作已经正常启动了
+autorestart = false   ; 程序异常退出后自动重启
+startretries = 1     ; 启动失败自动重试次数，默认是 3
+user = tomcat          ; 用哪个用户启动
+redirect_stderr = true  ; 把 stderr 重定向到 stdout，默认 false
+stdout_logfile_maxbytes = 500MB  ; stdout 日志文件大小，默认 50MB
+stdout_logfile_backups = 15     ; stdout 日志文件备份数
+; stdout 日志文件，需要注意当指定目录不存在时无法正常启动，所以需要手动创建目录
+stdout_logfile = /home/java/rest/tomcatcode/nohup.out ;应用日志目录
+
+
+
+【CMD】
+#停止某一个进程
+supervisorctl stop tomcat
+
+#启动某个进程
+supervisorctl start tomcat
+
+#重启某个进程
+supervisorctl restart tomcat
+
+#查看进程状态
+supervisorctl status tomcat
+
+#停止全部进程 start、restart、stop 都不会载入最新的配置文件
+supervisorctl stop all
+
+#载入最新的配置文件，停止原有进程并按新的配置启动、管理所有进程
+supervisorctl reload
+
+#根据最新的配置文件，启动新配置或有改动的进程，配置没有改动的进程不会受影响而重启。
+supervisorctl update
+
+【进程管理】
+启动supervisord管理的所有进程
+supervisorctl start all
+
+停止supervisord管理的所有进程
+supervisorctl stop all
+
+启动supervisord管理的某一个特定进程
+supervisorctl start program-name // program-name为[program:xx]中的xx
+
+停止supervisord管理的某一个特定进程
+supervisorctl stop program-name  // program-name为[program:xx]中的xx
+
+重启所有进程或所有进程
+supervisorctl restart all // 重启所有supervisorctl reatart program-name // 重启某一进程，program-name为[program:xx]中的xx
+
+查看supervisord当前管理的所有进程的状态
+supervisorctl status
+
+【supervisorctl 客户端命令】
+$ supervisorctl status  # 查看程序状态
+$ supervisorctl stop usercenter  # 关闭 usercenter 程序
+$ supervisorctl start usercenter # 启动 usercenter 程序
+$ supervisorctl restart usercenter # 重启 usercenter 程序
+$ supervisorctl reread ＃ 读取有更新（增加）的配置文件，不会启动新添加的程序
+$ supervisorctl update  ＃ 只重启配置文件修改过的程序
+
+
+【多主机统一管理】
+
+官方推荐：http://supervisord.org/plugins.html
+
+cesi：Web-based dashboard written in Python.
+
+Django-Dashvisor：Web-based dashboard written in Python. Requires Django 1.3 or 1.4.
+
+Nodervisor：Web-based dashboard written in Node.js.
+
+Supervisord-Monitor：Web-based dashboard written in PHP.
+
+SupervisorUI：Another Web-based dashboard written in PHP.
+
+supervisorclusterctl：Command line tool for controlling multiple Supervisor instances using Ansible.
+
+suponoff：Web-based dashboard written in Python 3. Requires Django 1.7 or later.
+
+Supvisors：Designed for distributed tomcatlications, written in Python 2.7. Includes an extended XML-RPC API and a Web-based dashboard.
+
+【例子】vim /opt/webserver.py
+#!/usr/bin/env python
+import socket
+
+HOST, PORT = '', 8080
+
+listen_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+listen_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+listen_socket.bind((HOST, PORT))
+listen_socket.listen(1)
+while True:
+    client_connection, client_address = listen_socket.accept()
+    request = client_connection.recv(1024)
+    http_response = """\
+HTTP/1.1 200 OK
+   Hello World!
+"""
+    client_connection.sendall(http_response)
+    client_connection.close()
+	
+	
+---------------->
+vim /etc/supervisord.d/webserver.ini
+[program:webserver]
+autostart=true
+startretries=3
+command=/usr/bin/python /opt/webserver.py
+
+supervisorctl update
+upervisorctl status webserver
