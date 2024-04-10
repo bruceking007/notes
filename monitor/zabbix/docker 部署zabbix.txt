@@ -1,0 +1,115 @@
+https://www.zabbix.com/documentation/5.0/zh/manual/installation/containers
+https://wandouduoduo.github.io/articles/a16acd4c.html
+
+docker network create --subnet 172.20.0.0/16 --ip-range 172.20.240.0/20 zabbix-net
+
+docker run --name mysql-server -t \
+	  -p 3306:3306 \
+	  -v /data/mysql/conf.d:/etc/mysql/conf.d \
+	  -v /data/mysql/data:/var/lib/mysql \
+      -e MYSQL_DATABASE="zabbix" \
+      -e MYSQL_USER="zabbix" \
+      -e MYSQL_PASSWORD="123.com" \
+      -e MYSQL_ROOT_PASSWORD="123.com" \
+      --network=zabbix-net \
+      -d mysql:5.7 \
+      --character-set-server=utf8 --collation-server=utf8_bin \
+      --default-authentication-plugin=mysql_native_password
+	  
+docker run --name zabbix-server-mysql -t \
+	  --link zabbix-java-gateway:zabbix-java-gateway \
+      -v /etc/localtime:/etc/localtime \
+	  -v /etc/timezone:/etc/timezone \
+	  -v /data/zabbix/alertscripts:/usr/lib/zabbix/alertscripts \
+	  -v /data/zabbix/externalscripts:/usr/lib/zabbix/externalscripts \
+      -e DB_SERVER_HOST="mysql-server" \
+      -e MYSQL_DATABASE="zabbix" \
+      -e MYSQL_USER="zabbix" \
+      -e MYSQL_PASSWORD="123.com" \
+      -e MYSQL_ROOT_PASSWORD="123.com" \
+      -e ZBX_JAVAGATEWAY="zabbix-java-gateway" \
+      --network=zabbix-net \
+      -p 10051:10051 \
+      --restart unless-stopped \
+      -d zabbix/zabbix-server-mysql:alpine-5.0-latest
+	  
+docker run --name zabbix-web-nginx-mysql -t \
+      -e ZBX_SERVER_HOST="zabbix-server-mysql" \
+      -e DB_SERVER_HOST="mysql-server" \
+      -e MYSQL_DATABASE="zabbix" \
+      -e MYSQL_USER="zabbix" \
+      -e MYSQL_PASSWORD="123.com" \
+      -e MYSQL_ROOT_PASSWORD="123.com" \
+      --network=zabbix-net \
+      -p 80:8080 \
+      --restart unless-stopped \
+      -d zabbix/zabbix-web-nginx-mysql:alpine-5.0-latest
+      
+      
+      
+      
+===========数据库非docker部署
+
+【创建网络】
+docker network create --subnet 172.20.0.0/16 --ip-range 172.20.240.0/20 zabbix-net
+
+【部署zabbix-server】
+docker run --name zabbix-server-mysql -t \
+      -v /etc/localtime:/etc/localtime \
+	  -v /etc/timezone:/etc/timezone \
+	  -v /data/zabbix/alertscripts:/usr/lib/zabbix/alertscripts \
+	  -v /data/zabbix/externalscripts:/usr/lib/zabbix/externalscripts \
+      -e DB_SERVER_HOST="192.168.31.11" \
+      -e MYSQL_DATABASE="zabbix" \
+      -e MYSQL_USER="zabbix" \
+      -e MYSQL_PASSWORD="zabbix" \
+      -e MYSQL_ROOT_PASSWORD="123.com" \
+      --network=zabbix-net \
+      -p 10051:10051 \
+      --restart unless-stopped \
+      -d zabbix/zabbix-server-mysql:alpine-5.0-latest
+	  
+
+【部署访问web】
+docker run --name zabbix-web-nginx-mysql -t \
+      -v /etc/localtime:/etc/localtime \
+      -v /etc/timezone:/etc/timezone \
+      -v /zabbix/assets/fonts:/usr/share/zabbix/assets/fonts \
+      -v /zabbix/etc/php7:/etc/php7 \
+      -e ZBX_SERVER_HOST="zabbix-server-mysql" \
+      -e DB_SERVER_HOST="192.168.31.11" \
+      -e MYSQL_DATABASE="zabbix" \
+      -e MYSQL_USER="zabbix" \
+      -e MYSQL_PASSWORD="zabbix" \
+      -e MYSQL_ROOT_PASSWORD="123.com" \
+      --network=zabbix-net \
+      -p 80:8080 \
+      --restart unless-stopped \
+      -d zabbix/zabbix-web-nginx-mysql:alpine-5.0-latest
+	  
+	  
+【访问】
+http://192.168.31.11/zabbix
+
+【中文乱码】
+C:\Windows\Fonts
+mkdir -p /zabbix/assets/fonts
+ln -sv SIMKAI.TTF DejaVuSans.ttf
+-v /zabbix/assets/fonts:/usr/share/zabbix/assets/fonts
+
+
+
+【部署zabbix_agent】
+docker run --name zabbix-agent \
+-e ZBX_HOSTNAME="172.20.240.1" \
+-e ZBX_SERVER_HOST="172.20.240.1" \
+--network=zabbix-net \
+-d zabbix/zabbix-agent:alpine-5.0-latest
+
+【时间相差5小时】
+mkdir /zabbix/etc
+docker cp zabbix-web-nginx-mysql:/etc/php7 /zabbix/etc
+vim /zabbix/etc/php7/php-fpm.d/zabbix.conf
+原来的注释掉
+; php_value[date.timezone] = ${PHP_TZ}
+php_value[date.timezone] = Asia/Shanghai   #添加
