@@ -1,0 +1,25 @@
+下载包 http://apr.apache.org
+
+参考文档
+https://blog.51cto.com/zpf666/2345345
+https://tanwenbo.top/course/ubuntu-16-04-%E6%9B%B4%E6%96%B0openssl%E8%87%B31-1-1.html   openssl至1.1.1
+
+
+
+
+1、conf/server.xml
+在 minSpareThreads="350" 添加 prestartminSpareThreads="true"
+
+2、conf/server.xml
+找到 protocol="org.apache.coyote.http11.Http11NioProtocol"
+
+改成 protocol="org.apache.coyote.http11.Http11AprProtocol"
+
+
+3、bin/catalina.sh 加入以下配置
+JAVA_OPTS="$JAVA_OPTS -Djava.library.path=/usr/local/apr/lib"
+
+
+
+
+sed -i 's/Http11NioProtocol/Http11AprProtocol/g' conf/server.xml
