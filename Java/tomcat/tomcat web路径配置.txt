@@ -1,0 +1,65 @@
+方式一、
+【1】http://192.168.91.31:8080/ 直接打开
+     <Host name="localhost"  appBase="weapps"
+            unpackWARs="false" autoDeploy="false">
+        <Context path="" docBase="/home/java/wm/peoject" reloadable="false" crossContext="true"></Context>
+
+
+
+【2】http://192.168.91.31:8080/web 
+      <Host name="localhost"  appBase="webapps"
+            unpackWARs="false" autoDeploy="false">
+        <Context path="/web" docBase="/home/java/wm/peoject" reloadable="false" crossContext="true"></Context>
+
+
+方式二、
+【1】		
+      <Host name="localhost"  appBase="/home/java/wm"
+            unpackWARs="false" autoDeploy="false">
+        <Context path="" docBase="peoject" reloadable="false" crossContext="true"></Context>
+
+【2】		
+      <Host name="localhost"  appBase="/home/java/wm"
+            unpackWARs="false" autoDeploy="false">
+        <Context path="/web" docBase="peoject" reloadable="false" crossContext="true"></Context>
+	
+peoject是相对路径。具体是/home/java/wm/peoject
+
+
+方式三、
+【1】		
+      <Host name="localhost"  appBase="webapps"
+            unpackWARs="false" autoDeploy="false">
+        <Context path="" docBase="/home/java/wm/project" reloadable="false" crossContext="true"></Context>
+
+【2】		
+      <Host name="localhost"  appBase="webapps"
+            unpackWARs="false" autoDeploy="false">
+        <Context path="/web" docBase="/home/java/wm/project" reloadable="false" crossContext="true"></Context>
+
+docBase只是指向了你某个应用的目录，这个可以和appBase没有任何关系
+peoject是相对路径。具体是/home/java/wm/peoject
+【优先采用方式三】再来考虑方式二	
+
+
+path 指出你的访问路径
+docBase指出你的存放路径
+debug 为设定debug的等级0提供最少的信息,9提供最多的信息
+reloadable=true时 当web.xml或者class有改动的时候都会自动重新加载不需要从新启动服务
+crosscontext="true"表示配置的不同context共享一个session
+
+【appBase】
+1 这个目录下面的子目录将自动被部署为应用。
+2 这个目录下面的.war文件将被自动解压缩并部署为应用
+
+而docBase只是指向了你某个应用的目录，这个可以和appBase没有任何关系。
+
+总结：
+如果你想自己指定路径，那么应该在docBase里面
+如果你想简单，那么直接把他们复制到appBase下面就行了
+
+appBase:虚拟目录的路径(用来运行jsp的目录)；
+doBase:项目的顶级目录就相当于webapps 中的目录名称，也就是iis中的网站根目录；
+
+https://blog.csdn.net/yztezhl/article/details/80753252
+https://www.jianshu.com/p/ee303046e0a7

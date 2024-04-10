@@ -1,0 +1,116 @@
+<Connector port="8181"   
+                protocol="HTTP/1.1"  
+                maxHttpHeaderSize="8192"
+                keepAliveTimeout="15000"
+                maxKeepAliveRequests="1"        
+                maxThreads="1000"  
+                minSpareThreads="100"  
+                maxSpareThreads="1000"  
+                minProcessors="100"  
+                maxProcessors="1000"  
+                enableLookups="false"  
+                compression="on"  
+                compressionMinSize="2048"  
+                compressableMimeType="text/html,text/xml,text/javascript,text/css,text/plain"  
+                connectionTimeout="8000"  
+                URIEncoding="utf-8"  
+                acceptCount="1000"  
+                redirectPort="8443"  
+                disableUploadTimeout="true"/>
+				
+				
+<Connector executor="tomcatThreadPool" 
+	port="8082" 
+	protocol="HTTP/1.1"
+	connectionTimeout="30000"
+	redirectPort="8443"
+	maxThreads="340"
+	maxConnections="1000"
+	acceptCount="1000"
+	minSpareThreads="50"
+	maxSpareThreads="100"
+	acceptorThreadCount="8"
+	maxHttpHeaderSize="8192"
+	tcpNoDelay="true"
+	enableLookups="false"
+	URIEncoding="UTF-8" />					
+
+
+　<Connector port="8080"
+　　protocol="HTTP/1.1"
+　　maxHttpHeaderSize="8000"
+　　maxThreads="1000"
+　　minSpareThreads="100"
+　　maxSpareThreads="1000"
+　　minProcessors="100"
+　　maxProcessors="1000"
+　　enableLookups="false"
+　　compression="on"
+　　compressionMinSize="2048"
+　　compressableMimeType="text/html,text/xml,text/javascript,text/css,text/plain"
+　　connectionTimeout="20000"
+　　URIEncoding="utf-8"
+　　acceptCount="1000"
+　　redirectPort="8443"
+　　disableUploadTimeout="true"/>
+
+
+enableLookups：如果为true，调用request.getRemoteHost会执行DNS反查，反向解析IP对应的域名或主机，效率较低，建议设为false。
+connectionTimeout：网络连接超时，单位：毫秒。设置为 0 表示永不超时，这样设置有隐患的。通常可设置为30000 毫秒(也就是30秒)
+其中和最大连接数相关的参数为maxProcessors 和 acceptCount 。如果要加大并发连接数，应同时加大这两个参数。
+web server允许的最大连接数还受制于操作系统的内核参数设置，通常 Windows 是 2000 个左右， Linux 是1000 个左右。
+
+maxKeepAliveRequests  最大长连接个数（1表示禁用，-1表示不限制个数，默认100个。一般设置在100~200之间）
+acceptAccount   监听端口队列最大数，满了之后客户请求会被拒绝（不能小于maxSpareThreads  ）；当最大线程数（maxThreads）被使用完时，可以放入请求队列排队个数，超过这个数返回connection refused（请求被拒绝），一般设置和maxThreads一样，不过这个具体需要根据自己的应用实际访问峰值和平均值来权衡，默认值为100.
+
+prestartminSpareThreads：在tomcat初始化的时候就初始化minSpareThreads的参数值，如果不等于true，minSpareThreads的值就没啥效果了
+
+
+设置session过期时间 单位为分钟
+conf\web.xml中通过参数指定：
+
+    <session-config>   
+        <session-timeout>180</session-timeout>     
+    </session-config> 
+
+启动时警告===
+25-Nov-2021 14:59:13.334 警告 [main] org.apache.tomcat.util.digester.SetPropertiesRule.begin [SetPropertiesRule]{Server/Service/Executor} Setting property 'maxSpareThreads' to '1000' did not find a matching property.
+25-Nov-2021 14:59:13.452 警告 [main] org.apache.catalina.startup.SetAllPropertiesRule.begin [SetAllPropertiesRule]{Server/Service/Connector} Setting property 'minProcessors' to '100' did not find a matching property.
+25-Nov-2021 14:59:13.452 警告 [main] org.apache.catalina.startup.SetAllPropertiesRule.begin [SetAllPropertiesRule]{Server/Service/Connector} Setting property 'maxProcessors' to '1000' did not find a matching property.
+"
+以下几个参数不在使用在8.0
+maxSpareThreads	
+minProcessors
+maxProcessors
+	
+【最终采用配置】
+    <Executor 
+            name="tomcatThreadPool" 
+            namePrefix="myapp-exec-"
+            maxThreads="1000" 
+            minSpareThreads="150" 
+            maxIdleTime="60000"
+            prestartminSpareThreads="true"
+            maxQueueSize = "100" />
+
+    <Connector 
+            executor="tomcatThreadPool"
+            port="8080" 
+            protocol="org.apache.coyote.http11.Http11AprProtocol"
+            maxConnections="10000"
+            acceptCount="1000"
+            maxPostSize="10485760"
+            maxHttpHeaderSize="8192"
+            maxKeepAliveRequests="1" 
+            connectionTimeout="30000"
+            keepAliveTimeout="120000"
+            tcpNoDelay="true"
+            compression="on"  
+            compressionMinSize="2048"  
+            compressableMimeType="text/html,text/plain,text/css,application/javascript,application/json,application/x-font-ttf,application/x-font-otf,image/svg+xml,image/jpeg,image/png,image/gif,audio/mpeg,video/mp4"
+            enableLookups="false"
+            disableUploadTimeout="true"
+            URIEncoding="utf-8"
+            server="No Version"
+            redirectPort="8443" />
+

@@ -1,0 +1,18 @@
+【1】启动过慢
+警告 [localhost-startStop-1] org.apache.catalina.util.SessionIdGeneratorBase.createSecureRandom 使用[SHA1PRNG]创建会话ID生成的SecureRandom实例花费了[31,623]毫秒
+
+1）在Tomcat环境中解决
+
+可以通过配置JRE使用非阻塞的Entropy Source。
+
+在catalina.sh中加入这么一行：-Djava.security.egd=file:/dev/./urandom 即可。
+
+2）在JVM环境中解决
+/usr/java/jdk/jre/lib/security
+vim java.security
+securerandom.source=file:/dev/random 改为 securerandom.source=file:/dev/./random
+
+https://www.cnblogs.com/chyg/p/6844737.html
+
+
+经过验证，第一种方法有效。

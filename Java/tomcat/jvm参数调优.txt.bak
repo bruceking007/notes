@@ -1,0 +1,146 @@
+JAVA_OPTS="$JAVA_OPTS -server -Xms2048m -Xmx2048m -XX:PermSize=128m -XX:MaxPermSize=256 -Djava.awt.headless=true"
+export JAVA_OPTS="-server -Xms512m -Xmx1024m -XX:MaxNewSize=512m -XX:PermSize=128m  -XX:MaxPermSize=256m -XX:SurvivorRatio=14 -XX:+UseParallelOldGC"
+JAVA_OPTS="-XX:PermSize=64M -XX:MaxPermSize=128m -Xms512m -Xmx1024m -Duser.timezone=Asia/Shanghai"
+
+JAVA_OPTS="-server -Xms2048M -Xmx2048M -XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:+UseCMSCompactAtFullCollection -XX:CMSFullGCsBeforeCompaction=5 -XX:+PrintGCDetails -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=$CATALINA_HOME/logs/heap.dump"
+
+set JAVA_OPTS="-server -Xms256m -Xmx512m VT-XX:MetaspaceSize=128m VT-XX:MaxMetaspaceSize=256m
+
+CATALINA_OPTS="-Xmx250m -Xms250m -Xmn100m -XX:SurvivorRatio=8 -XX:+UseG1GC -XX:MaxTenuringThreshold=14 -XX:ParallelGCThreads=8 -XX:ConcGCThreads=8 -XX:+DisableExplicitGC
+-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=d:/a.dump -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintHeapAtGC -XX:+TraceClassLoading -XX:+PrintClassHistogram"
+
+JAVA_OPTS="-Djava.awt.headless=true -Dfile.encoding=UTF-8 -server -Xms1024m -Xmx1024m -XX:NewSize=512m -XX:MaxNewSize=512m -XX:PermSize=512m -XX:MaxPermSize=512m -XX:+DisableExplicitGC"
+
+JAVA_OPTS="
+	-Dresin.home=$SERVER_ROOT
+	-server
+	-Xms6000M
+	-Xmx6000M
+	-Xmn500M
+	-XX:PermSize=500M
+	-XX:MaxPermSize=500M
+	-XX:SurvivorRatio=65536
+	-XX:MaxTenuringThreshold=0
+	-Xnoclassgc
+	-XX:+DisableExplicitGC
+	-XX:+UseParNewGC
+	-XX:+UseConcMarkSweepGC
+	-XX:+UseCMSCompactAtFullCollection
+	-XX:CMSFullGCsBeforeCompaction=0
+	-XX:+CMSClassUnloadingEnabled
+	-XX:+CMSParallelRemarkEnabled
+	-XX:CMSInitiatingOccupancyFraction=90
+	-XX:SoftRefLRUPolicyMSPerMB=0
+	-XX:+PrintClassHistogram
+	-XX:+PrintGCDetails
+	-XX:+PrintGCTimeStamps
+	-XX:+PrintHeapAtGC
+	-Xloggc:log/gc.log"
+	
+https://www.freesion.com/article/7529596291/
+
+https://blog.csdn.net/wodewutai17quiet/article/details/78907691?spm=1035.2023.3001.6557&utm_medium=distribute.pc_relevant_bbs_down.none-task-blog-2~default~OPENSEARCH~default-1.nonecase&depth_1-utm_source=distribute.pc_relevant_bbs_down.none-task-blog-2~default~OPENSEARCH~default-1.nonecase
+
+Xms一般与Xmx配置为相同值，这样的好处是JVM不必在运行期间再为扩展内存空间而消耗性能；
+server: 运行模式(server的性能更好，而client是默认的运行模式)
+Xms: Java Heap的初始内存(堆内存)，最好不要超过内存的80%
+Xmx: Java Heap的最大内存 建议设置为物理内存的50%,也最好不要超过80%
+-Xmx250m 　　　　　　 最大堆大小
+-Xms250m 　　　　　　　　初始堆大小
+-Xmn100m：设置年轻代大小为100m。整个JVM内存大小=年轻代大小 + 年老代大小 + 持久代大小。持久代一般固定大小为64m，所以增大年轻代后，将会减小年老代大小。此值对系统性能影响较大，Sun官方推荐配置为整个堆的3/8。一般设置为Xmx的3、4分之一
+-XX:SurvivorRatio=8 　　　　　　Eden区与Survivor区的大小比值，设置为8,则两个Survivor区与一个Eden区的比值为2:8,一个Survivor区占整个年轻代的1/10
+-XX:+UseG1GC 　　　　　　使用 G1 (Garbage First) 垃圾收集器
+-XX:MaxTenuringThreshold=14 　　提升年老代的最大临界值(tenuring threshold). 默认值为 15[每次GC，增加1岁，到15岁如果还要存活，放入Old区]
+-XX:ParallelGCThreads=8 　　设置垃圾收集器在并行阶段使用的线程数[一般设置为本机CPU线程数相等，即本机同时可以处理的个数，设置过大也没有用]
+-XX:ConcGCThreads=8 　　　　并发垃圾收集器使用的线程数量
+-XX:+DisableExplicitGC　　　　　　　　　　禁止在启动期间显式调用System.gc()
+-XX:+HeapDumpOnOutOfMemoryError OOM时导出堆到文件
+-XX:HeapDumpPath=d:/a.dump 　　 导出OOM的路径
+-XX:+PrintGCDetails 　　　　 打印GC详细信息
+-XX:+PrintGCTimeStamps 　　　 打印CG发生的时间戳
+-XX:+PrintHeapAtGC 　　　　　 每一次GC前和GC后，都打印堆信息
+-XX:+TraceClassLoading 　　　 监控类的加载
+-XX:+PrintClassHistogram 　　　　　 按下Ctrl+Break后，打印类的信息
+-XX:+UseParallelGC：设置为并行收集器。此配置仅对年轻代有效。即年轻代使用并行收集，而年老代仍使用串行收集。
+-XX:+UseParallelOldGC：配置年老代垃圾收集方式为并行收集，JDK6.0 开始支持对年老代并行收集
+-XX:UseAdaptiveSizePolicy = 100:设置此项以后，并行收集器会自动选择年轻代大小和相应的Surivior区比例，以达到目标系统规定的最低响应时间或者收集频率等，此值建议使用并行收集器时一直打开
+-XX:MaxTenuringThreshold设置的是年龄阈值，默认15
+-XX:SoftRefLRUPolicyMSPerMB  这个值jvm默认是1000ms，如果被设置为0，就会导致软引用对象马上被回收掉，进而会导致重新频繁的生成新的类，而无法达到复用的效果。
+-XX: MaxMetaspaceSize:   这个是jdk1.8新的参数，用来代替以前的MaxPermSize（持久代大小）
+
+MetaspaceSize和MaxMetaspaceSize设置一样大；
+具体设置多大，建议稳定运行一段时间后通过jstat -gc pid确认且这个值大一些，对于大部分项目256m即可
+
+-XX:+UseConcMarkSweepGC //并发标记清除（CMS）收集器 启用 CMS 垃圾收集器
+-XX:+CMSParallelRemarkEnabled //降低标记停顿
+
+
+#JAVA_OPTS="$JAVA_OPTS -server -Xms2048m -Xmx2048m -XX:PermSize=128m -XX:MaxPermSize=256m -Djava.awt.headless=true -Dfile.encoding=UTF-8 -XX:+DisableExplicitGC -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=$CATALINA_HOME/logs/heap.dump -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintHeapAtGC  -XX:+PrintClassHistogram -Duser.timezone=GMT+08 -Djava.library.path=/usr/local/apr/lib"
+
+启动时警告===
+Java HotSpot(TM) 64-Bit Server VM warning: ignoring option PermSize=128m; support was removed in 8.0
+Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=256m; support was removed in 8.0
+Java HotSpot(TM) 64-Bit Server VM warning: UseCMSCompactAtFullCollection is deprecated and will likely be removed in a future release.
+Java HotSpot(TM) 64-Bit Server VM warning: CMSFullGCsBeforeCompaction is deprecated and will likely be removed in a future release.
+以下几个参数不在使用在8.0
+PermSize
+MaxPermSize
+UseCMSCompactAtFullCollection
+CMSFullGCsBeforeCompaction
+
+JAVA_OPTS="$JAVA_OPTS -server -Xms2048m -Xmx2048m -Xss256k -Djava.awt.headless=true -Dfile.encoding=UTF-8 -XX:SurvivorRatio=8 -XX:MaxTenuringThreshold=0 -XX:+UseParallelGC -XX:+UseParallelOldGC -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled -XX:+CMSParallelRemarkEnabled  -XX:CMSInitiatingOccupancyFraction=90 -XX:SoftRefLRUPolicyMSPerMB=0 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=$CATALINA_HOME/logs/heap.dump -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintHeapAtGC -XX:+PrintClassHistogram -Duser.timezone=GMT+08 -Xloggc:../logs/gc.log"
+
+-XX:SurvivorRatio=65536  -XX:MaxTenuringThreshold=0  目的就是去掉了救助空间 也就是年轻代中只有Eden区 Eden的对象 会直接到年老区中
+-Xnoclassgc 禁用类垃圾回收，性能会高一点；
+-XX:+DisableExplicitGC禁止System.gc()，免得程序员误调用gc方法影响性能；
+-XX:+UseParNewGC，对年轻代采用多线程并行回收，这样收得快；
+
+https://www.cnblogs.com/gxyandwmm/p/9456955.html
+
+【最终采用配置】
+JAVA_OPTS="$JAVA_OPTS -server -Xms1024m -Xmx1024m -Xmn256M -XX:MetaspaceSize=256M -XX:MaxMetaspaceSize=512M -Xss256k -Djava.awt.headless=true -Dfile.encoding=UTF-8 -XX:+PrintClassHistogram -XX:SurvivorRatio=8 -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:+ExplicitGCInvokesConcurrent -XX:+CMSClassUnloadingEnabled -XX:+CMSParallelRemarkEnabled  -XX:CMSInitiatingOccupancyFraction=80 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=../logs/heap.dump -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintHeapAtGC -Duser.timezone=GMT+08 -Xloggc:../logs/gc.log -Djava.security.egd=file:/dev/./urandom"
+
+
+【没有调优情况下，只设置了xms xmx】
+JAVA_OPTS="$JAVA_OPTS -server -Xms1024m -Xmx1024m -Djava.awt.headless=true -Dfile.encoding=UTF-8 -Duser.timezone=GMT+08 -XX:+PrintClassHistogram -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=../logs/heap.dump -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintHeapAtGC  -Xloggc:../logs/gc.log -Djava.security.egd=file:/dev/./urandom"
+
+=========================================
+【查看当前JVM运行的参数】
+jinfo -flags pid
+
+【查看所有信息】
+jinfo pid
+
+【查看某个具体参数实际配置】
+jinfo -flag MaxMetaspaceSize PID
+
+【jmap -heap pid:查看堆使用情况】
+https://www.freesion.com/article/84111270983/
+
+
+任何一个JVM参数的默认值可以通过java -XX:+PrintFlagsFinal -version |grep JVMParamName获取，
+例如：java -XX:+PrintFlagsFinal -version |grep MetaspaceSize
+      java -XX:+PrintFlagsInitial | grep MetaspaceSize
+
+【查看内存使用率】
+jstat -gcutil PID
+
+【查看gc】
+jstat -gc PID
+
+【查看jvm全部参数默认值】
+java -XX:+PrintFlagsInitial -version
+
+【查看jvm全部的参数】
+java -XX:+PrintFlagsFinal -version
+
+
+
+
+https://zhuanlan.zhihu.com/p/73620440  Tomcat8史上最全优化实践
+https://juejin.cn/post/6949806402743304206  JVM调优总结
+https://blog.csdn.net/zombres/article/details/103252952  java8 JVM调优 及 centos 调优
+https://codeantenna.com/a/2l3C52iMEC  JVM参数手册调优指南
+https://timegoesby.top/JVM-opt/  JVM性能调优笔记
+https://xie.infoq.cn/article/632322582f697268a7fe77b35 还不会 JVM 调优吗？照着做就行
+http://www.4k8k.xyz/article/boonya/69230214  http://www.4k8k.xyz/article/boonya/69230214
