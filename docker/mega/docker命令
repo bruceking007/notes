@@ -1,0 +1,211 @@
+### 免root执行docker命令
+
+```
+sudo usermod -aG docker $USER
+```
+
+
+
+### 常用操作
+
+#### 1、 一次性删除所有的容器
+
+```
+docker rm -f `docker ps -aq`
+```
+
+
+
+#### 2、 一次性删除所有的镜像
+
+```
+docker rmi $(docker image ls | awk 'NR!=1 {print $1 ":" $2}')
+```
+
+
+
+#### 3 、一次性删除未打标签的镜像
+
+```
+docker image ls | grep none | awk '{print $3}' | xargs docker rmi
+```
+
+
+
+#### 4、 一次性删除所有volume
+
+```
+docker volume rm `docker volume ls -q`
+```
+
+
+
+#### 5、查看容器详情
+
+```
+# 重看容器详情
+docker inspect 容器id或名字
+
+# 重看docker详情
+docker info
+```
+
+
+
+#### 6、启动容器
+
+```
+docker run -it 镜像名字 /bin/sh
+```
+
+
+
+#### 7、进入一个运行中的容器
+
+```
+docker exec -it 容器id /bin/sh
+```
+
+
+
+#### 8、打tag
+
+```
+docker tag 镜像id oldboy1103/alpine:latest
+```
+
+
+
+#### 9、查看容器占用磁盘空间
+
+```
+docker ps -a --format "table {{.Size}}\t{{.Names}}" | sort -hr
+```
+
+
+
+#### 10、查看容器id
+
+```
+docker inspect nginx --format "{{.ID}}"
+```
+
+
+
+#### 11、查看日志文件
+
+```
+# 查看nginx容器的日志位置
+docker inspect nginx --format "{{.LogPath}}"
+
+# 查看所有容器的日志位置
+docker inspect --format='{{.LogPath}}' `docker ps -a -q`
+```
+
+
+
+```shell
+# 获取镜像，ID，端口号，状态
+docker ps -a --format "table {{.Image}}\t{{.ID}}\t{{.Ports}}\t{{.Status}}" | sort -hr
+
+# 根据状态列出容器
+docker ps -a -f  "status=running"
+docker ps -a -f  "status=exited"
+
+# 获取容器的IP
+docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -q)
+
+# 获取容器的mac地址
+docker inspect --format='{{range .NetworkSettings.Networks}}{{.MacAddress}}{{end}}' $(docker ps -a -q)
+
+# 获取容器name
+docker inspect --format='{{.Name}}' $(docker ps -aq)
+docker inspect --format='{{.Name}}' $(docker ps -aq)|cut -d"/" -f2
+
+# 获取容器的Hostname
+docker inspect --format '{{ .Config.Hostname }}' $(docker ps -q)
+
+# 获取hostname,ip
+docker inspect --format 'Hostname:{{ .Config.Hostname }}  Name:{{.Name}} IP:{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -q)
+
+# 获取容器的镜像
+docker inspect --format='{{.Config.Image}}' `docker ps -a -q`
+```
+
+--------
+
+
+
+### 容器备份还原
+
+#### 镜像的备份还原
+
+##### 1、commit将容器保存成镜像
+
+```
+docker commit [选项] <容器ID或容器名> [<仓库名>[:<标签>]]
+```
+
+##### 2、将镜像导出成tar (镜像是分层的,可以回滚,)
+
+```
+docker save -o ./backup.tar gitlab/gitlab-ce
+```
+
+##### 3、从tar导入镜像（镜像备份下来的tar）
+
+```
+docker load -i ./backup.tar
+```
+
+注意：以上会备份镜像的多层。
+
+#### 容器的备份还原
+
+##### 1、备份容器
+
+```
+docker export php > phprongqi.tar
+```
+
+##### 2、还原成镜像
+
+```
+docker import ./phprongqi.tar php
+```
+
+注意：备份的只是一层镜像
+
+
+
+------------
+
+### 容器的日志
+
+#### 日志位置
+
+docker日志建议输出控制台，控制台日志存储在主机上,先查看`Logging Driver`类型，默认应该是`json`格式.
+
+```
+docker info | grep "Logging Driver"
+```
+
+json格式的日志在`/var/lib/docker/containers/<containerID>/<containerID>-json.log`
+local格式的日志在`/var/lib/docker/containers/<containerID>/local-logs/container.log`
+
+
+
+#### 控制日志大小
+
+vi /etc/docker/daemon.json
+
+```yaml
+{ 
+    "log-driver": "json-file",
+    "log-opts": {
+        "max-size": "10m", "max-file": "3"
+    }
+}
+```
+
+https://zahui.fan/posts/4bc23141/
