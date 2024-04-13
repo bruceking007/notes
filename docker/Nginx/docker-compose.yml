@@ -1,0 +1,17 @@
+version: '3'
+services:
+    nginx:
+      container_name: nginx
+      hostname: nginx
+      image: nginx:1.24.0
+      restart: always
+      environment:
+        TZ: Asia/Shanghai
+      volumes:
+        - /etc/localtime:/etc/localtime:ro
+        - /opt/nginx/conf/nginx.conf:/etc/nginx/nginx.conf
+        - /opt/nginx/conf/conf.d:/etc/nginx/conf.d
+        - /opt/nginx/log:/var/log/nginx
+        - /opt/nginx/html:/usr/share/nginx/html
+      ports:
+        - 80:80
