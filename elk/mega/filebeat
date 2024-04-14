@@ -1,0 +1,400 @@
+[TOC]
+
+#### 0、下载地址
+
+https://www.elastic.co/cn/downloads/past-releases/filebeat-7-10-2
+
+https://www.elastic.co/cn/downloads/past-releases/filebeat-oss-8-8-2
+
+##### centos
+
+```
+wget https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-7.10.2-x86_64.rpm
+
+rpm -ivh filebeat-7.10.2-x86_64.rpm
+```
+
+
+
+##### ubuntu
+
+```shell
+wget https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-7.10.2-amd64.deb
+dpkg -i filebeat-7.10.2-amd64.deb
+
+oss版
+
+wget https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-oss-7.10.2-amd64.deb
+dpkg -i filebeat-oss-7.10.2-amd64.deb
+
+wget https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-oss-8.8.2-amd64.deb
+dpkg -i filebeat-oss-8.8.2-amd64.deb
+```
+
+```shell
+dpkg -l filebeat  #查询安装内容
+dpkg -P filebeat  #卸载安装内容
+```
+
+
+
+#### 1、filebeat-for-nginx
+
+```yaml
+filebeat.inputs:
+- type: log
+  enabled: true
+  paths:
+    - /var/log/nginx/cfox.pro.DownloadPage.access.json
+  json.keys_under_root: true
+  json.overwriite_keys: true
+  fields:
+    log_topic: cfox-pro
+    project: cfox
+    env: pro
+    appname: downloadpage-access
+    logtype: nginx
+  tags:
+    - "json"
+    - "nginx"
+    - "access"
+  tail_files: true
+
+- type: log
+  enabled: true
+  paths:
+    - /var/log/nginx/cfox.pro.h5.access.json
+  json.keys_under_root: true
+  json.overwriite_keys: true
+  fields:
+    log_topic: cfox-pro
+    project: cfox
+    env: pro
+    appname: h5-access
+    logtype: nginx
+  tags:
+    - "json"
+    - "nginx"
+    - "access"
+  tail_files: true
+
+- type: log
+  enabled: true
+  paths:
+    - /var/log/nginx/dm.DownloadPage.access.json
+  json.keys_under_root: true
+  json.overwriite_keys: true
+  fields:
+    log_topic: dm-pro
+    project: dm
+    env: pro
+    appname: downloadpage-access
+    logtype: nginx
+  tags:
+    - "json"
+    - "nginx"
+    - "access"
+  tail_files: true
+
+- type: log
+  enabled: true
+  paths:
+    - /var/log/nginx/dm.h5.access.json
+  json.keys_under_root: true
+  json.overwriite_keys: true
+  fields:
+    log_topic: dm-pro
+    project: dm
+    env: pro
+    appname: h5-access
+    logtype: nginx
+  tags:
+    - "json"
+    - "nginx"
+    - "access"
+  tail_files: true
+
+- type: log
+  enabled: true
+  paths:
+    - /var/log/nginx/bball.pro.DownloadPage.access.json
+  json.keys_under_root: true
+  json.overwriite_keys: true
+  fields:
+    log_topic: bball-pro
+    project: bball
+    env: pro
+    appname: downloadpage-access
+    logtype: nginx
+  tags:
+    - "json"
+    - "nginx"
+    - "access"
+  tail_files: true
+
+- type: log
+  enabled: true
+  paths:
+    - /var/log/nginx/bball.pro.h5.access.json
+  json.keys_under_root: true
+  json.overwriite_keys: true
+  fields:
+    log_topic: bball-pro
+    project: bball
+    env: pro
+    appname: h5-access
+    logtype: nginx
+  tags:
+    - "json"
+    - "nginx"
+    - "access"
+  tail_files: true
+
+
+output.kafka:                                   #输出到kafka系统
+  enabled: true
+  hosts: ["159.138.1.50:9094","49.0.247.44:9094","159.138.143.138:9094"]
+  topic: '%{[fields][log_topic]}'               #指定将日志存储到kafka集群的哪个topic中，这里的topic值是引用在inputs中定义的fields��通过这种方式可以将不同路径的日志分别存储到不同的topic中
+  partition.round_robin:
+    reachable_only: false
+  required_acks: 1
+  compression: gzip
+  max_message_bytes: 1000000
+
+```
+
+#### 2、filebeat-for-java
+
+```
+multiline.pattern: '^\d{4}-\d{1,2}-\d{1,2}\s\d{1,2}:\d{1,2}:\d{1,2}'
+multiline.pattern: '^s*(d{4}|d{2})-(d{2}|[a-zA-Z]{3})-(d{2}|d{4})'
+```
+
+
+
+```yaml
+filebeat.inputs:
+- type: log
+  enabled: true 
+  paths:
+    - /projects/logs/uni-gateway-4040.log
+  multiline.pattern: '^\d{4}-\d{1,2}-\d{1,2}'
+  multiline.negate: true
+  multiline.match: after
+  fields:
+    log_topic: cfox-pro
+    project: cfox
+    env: pro
+    appname: uni-gateway-4040
+    logtype: jar
+  tags: ["java"]
+  tail_files: true
+
+- type: log
+  enabled: true 
+  paths:
+    - /projects/logs/uni-upload-9015.log
+  multiline.pattern: '^\d{4}-\d{1,2}-\d{1,2}'
+  multiline.negate: true
+  multiline.match: after
+  fields:
+    log_topic: cfox-pro
+    project: cfox
+    env: pro
+    appname: uni-upload-9015
+    logtype: jar
+  tags: ["java"]
+  tail_files: true
+
+- type: log
+  enabled: true
+  paths:
+    - /projects/logs/unilive-api-13071.log
+  multiline.pattern: '^\d{4}-\d{1,2}-\d{1,2}'
+  multiline.negate: true
+  multiline.match: after
+  fields:
+    log_topic: dm-pro
+    project: dm
+    env: pro
+    appname: unilive-api-13071
+    logtype: jar
+  tags: ["java"]
+  tail_files: true
+
+- type: log
+  enabled: true
+  paths:
+    - /projects/logs/unilive-social-13101.log
+  multiline.pattern: '^\d{4}-\d{1,2}-\d{1,2}'
+  multiline.negate: true
+  multiline.match: after
+  fields:
+    log_topic: dm-pro
+    project: dm
+    env: pro
+    appname: unilive-social-13101
+    logtype: jar
+  tags: ["java"]
+  tail_files: true
+
+- type: log
+  enabled: true
+  paths:
+    - /projects/logs/unilive-api.log
+  multiline.pattern: '^\d{4}-\d{1,2}-\d{1,2}'
+  multiline.negate: true
+  multiline.match: after
+  fields:
+    log_topic: bball-pro
+    project: bball
+    env: pro
+    appname: unilive-api-9013
+    logtype: jar
+  tags: ["java"]
+  tail_files: true
+
+- type: log
+  enabled: true
+  paths:
+    - /projects/logs/unilive-social.log
+  multiline.pattern: '^\d{4}-\d{1,2}-\d{1,2}'
+  multiline.negate: true
+  multiline.match: after
+  fields:
+    log_topic: bball-pro
+    project: bball
+    env: pro
+    appname: unilive-social-9020
+    logtype: jar
+  tags: ["java"]
+  tail_files: true
+
+output.kafka:                                   #输出到kafka系统
+  enabled: true
+  hosts: ["10.10.0.220:9092","10.10.0.250:9092","10.10.0.134:9092"]
+  topic: '%{[fields][log_topic]}'               #指定将日志存储到kafka集群的哪个topic中，这里的topic值是引用在inputs中定义的fields，通过这种方式可以将不同路径的日志分别存储到不同的topic中
+  partition.round_robin:
+    reachable_only: false
+  required_acks: 1
+  compression: gzip
+  max_message_bytes: 1000000
+
+```
+
+#### 3、配置文件检查
+
+```
+filebeat test config -c filebeat.yml
+```
+
+
+
+#### 4、守护进程
+
+/usr/lib/systemd/system/filebeat.service 
+
+```
+[Unit]
+Description=Filebeat sends log files to Logstash or directly to Elasticsearch.
+Documentation=https://www.elastic.co/products/beats/filebeat
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+
+Environment="BEAT_LOG_OPTS="
+Environment="BEAT_CONFIG_OPTS=-c /etc/filebeat/filebeat.yml"
+Environment="BEAT_PATH_OPTS=--path.home /usr/share/filebeat --path.config /etc/filebeat --path.data /var/lib/filebeat --path.logs /var/log/filebeat"
+ExecStart=/usr/share/filebeat/bin/filebeat --environment systemd $BEAT_LOG_OPTS $BEAT_CONFIG_OPTS $BEAT_PATH_OPTS
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+```
+
+#### 5、filebeat对内存 io/cpu的消耗到底有多大
+
+```
+filebeat作为日志采集agent, 是需要部署到生产服务器上的.不理解filebeat的工作机制,不了解filebeat在实际生产使用中的内存使用将会给你带来意想不到的麻烦.
+
+有些文章说filebeat内存消耗很少,不会超过100M, 这简直是不负责任的胡说,假如带着这样的认识把filebeat部署到生产服务器上就等着哭吧.
+
+filebeat在空载情况(没有日志可采集)下的确不会有大的内存开销,但在有大量的日志需要采集时,filebeat的内存占用是没有固定值的, 那有没有理论值呢?答案是有, 为啥这么说,看下面公式:
+
+                              bytes_each_log * spool_size * M + a*N
+其中, bytes_each_log是单条日志大小, spool_size是配置文件里配置项,  M是单条日志在内存里的溢价系数(>1), N表示采集的文件个数,a为常数.
+
+spool_size的默认值是2048, 好多人估计都不会配置这个项,也会因此埋下祸根(OOM):
+
+
+10MB为filebeat支持的单条日志最大长度,超过的将会被截断丢弃
+假设忽略a*N部分的内存开销, 单条日志的内存溢价为3, 一旦出现单条日志大于50KB且有瞬间爆发量的时候, filebeat的内存占用将大于300MB,是不是有点吓人!如果出现了极端情况,单条日志>10M,即使filebeat会截断到10M那也是20GB!!是不是腿都软了!!!
+
+filebeat在实际使用过程中内存>300M,甚至15GB的情况浣熊都遇到过, 内存超过300M几乎经常遇到,基本都是因为客户没有按照吩咐的去做导致的; 15GB的那次有点意外和惊喜, 客户在自己的日志文件里打了大量的二进制文件(后来知道真相的我眼泪掉下来...), 大量的二进制文件触发了10MB规则,还好吃掉15GB内存后filebeat因OOM退出了,没有带来严重的损失.
+
+那怎么样才能避免以上内存灾难呢?划重点了,快快拿出小本本记录:
+
+(1)每个日志生产环境生产的日志大小,爆发量都不一样, 要根据自己的日志特点设定合适的spool_size值;什么叫合适,至少能避免内存>200MB的灾难;
+
+(2)在不知道日志实际情况(单条大小,爆发量), 务必把spool_size设置上,建议128或者256;
+```
+
+
+
+#### 6、问题
+
+##### 5.1 ubuntu filebeat启动失败或者运行一会儿关闭问题
+
+![image-20230719154013201](assets/image-20230719154013201.png)
+
+**原因**：在兼容性矩阵上，我可以看到 Ubuntu 22.04 不在受支持的操作系统之中？
+
+**解决办法：**
+
+1. 升级filebeat（升级到7.17.2以上版本）
+
+   ```shell
+   #卸载原来的版本
+   systemctl stop filebeat
+   dpkg -l filebeat
+   dpkg -P filebeat
+   #升级到新版本
+   wget https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-oss-8.8.2-amd64.deb
+   dpkg -i filebeat-oss-8.8.2-amd64.deb
+   systemctl start filebeat
+   systemctl enable filebeat
+   systemctl status filebeat
+   ```
+
+   
+
+2. filebeat.yml添加配置
+
+
+```yaml
+seccomp:
+  default_action: allow 
+  syscalls:
+  - action: allow
+    names:
+    - rseq
+```
+
+![image-20230720092427198](assets/image-20230720092427198.png)
+
+重启filebeat
+
+```shell
+rm -rf  /var/lib/filebeat/registry
+systemctl restart filebeat
+systemctl status filebeat
+```
+
+
+
+https://discuss.elastic.co/t/filebeat-and-glibc-errors-on-ubuntu-22-04/306653
+
+https://www.reddit.com/r/Wazuh/comments/vrzr4v/supported_os_conflict_between_wazuh_and_filebeat/
+
+* https://blog.csdn.net/qq_40774600/article/details/126947245 
