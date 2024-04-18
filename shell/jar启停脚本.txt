@@ -1,0 +1,94 @@
+只需要修改 APP_MAINCLASS的变量“XXX-1.0.0.jar”替换为自己jar的名字即可，其它不用动
+该脚本主要是通过jps + jar的名字获得进程号，进行kil
+
+stop.sh
+--------------
+#!/bin/bash
+# 主类
+APP_MAINCLASS="XXX-1.0.0.jar"
+# 进程ID
+psid=0
+# 记录尝试次数
+num=0
+# 获取进程ID，如果进程不存在则返回0，
+# 当然你也可以在启动进程的时候将进程ID写到一个文件中，
+# 然后使用的使用读取这个文件即可获取到进程ID
+getpid() {
+   javaps=`jps -l | grep $APP_MAINCLASS`
+   if [ -n "$javaps" ]; then
+      psid=`echo $javaps | awk '{print $1}'`
+   else
+      psid=0
+   fi
+}
+stop() {
+   getpid
+   num=`expr $num + 1`  
+   if [ $psid -ne 0 ]; then
+    # 重试次数小于3次则继续尝试停止服务
+    if [ "$num" -le 3 ];then
+    echo "attempt to kill... num:$num"
+      kill $psid
+      sleep 5
+    else
+    # 重试次数大于3次，则强制停止
+      echo "force kill..."
+      kill -9 $psid      
+    fi
+  # 检查上述命令执行是否成功
+    if [ $? -eq 0 ]; then
+       echo "Shutdown success..."
+    else
+       echo "Shutdown failed..."
+    fi
+    # 重新获取进程ID，如果还存在则重试停止
+    getpid
+    if [ $psid -ne 0 ]; then
+       echo "getpid... num:$psid"
+       stop
+    fi
+   else
+      echo "App is not running"
+   fi
+}
+stop
+--------
+
+start.sh
+
+---
+basepath=$(cd `dirname $0`; pwd)
+nohup java -server -Xmx2g -Xms2g -Xmn1024m  -XX:PermSize=128m -Xss256k -XX:+DisableExplicitGC -XX:+UseParNewGC -XX:-UseAdaptiveSizePolicy -XX:+UseConcMarkSweepGC -XX:+CMSParallelRemarkEnabled -XX:+UseCMSCompactAtFullCollection -XX:LargePageSizeInBytes=128m -XX:+UseFastAccessorMethods -XX:+UseCMSInitiatingOccupancyOnly -XX:CMSInitiatingOccupancyFraction=70 -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -Xloggc:logs/gc.log -XX:+PrintGCDateStamps -XX:+PrintGCTimeStamps -XX:HeapDumpPath=logs/dump.hprof -XX:ParallelGCThreads=4 -jar $basepath/XXX-1.0.0.jar &>nohup.log &
+----
+
+jenkis 脚本
+
+----
+ssh -Tq $IP << EOF 
+source /etc/profile
+#进入应用部署目录
+cd /data/app/test
+#
+DATE=`date +%Y-%m-%d_%H-%M-%S`
+#删除备份jar包
+rm -rf /data/app/test/xxx-1.0.0.jar.bak*
+#备份历史jar包
+mv /data/app/test/xxx-1.0.0.jar /data/app/test/xxx-1.0.0.jar.bak$DATE
+#从jenkins上拉取最新jar包
+scp root@$jenkisIP:/data/jenkins/workspace/test/target/XXX-1.0.0.jar /data/app/test
+# 执行停止应用脚本
+sh /data/app/test/stop.sh
+#执行重启脚本
+sh /data/app/test/start.sh
+exit
+EOF
+------
+注：
+
+$IP 是部署服务器ip,$jenkisIP 是jenkins所在的服务器ip。在部署前请设置jenkins服务器和部署服务器之间ssh免密登录
+
+/data/app/test 是部署jar包存放路径
+
+stop.sh 是上文的停止脚本
+
+start.sh 是上文的启动脚本

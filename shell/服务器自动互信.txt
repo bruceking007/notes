@@ -1,0 +1,39 @@
+具体的实现步骤如下：
+
+在本地服务器上使用ssh-keygen命令生成公钥和私钥。
+将公钥复制到目标服务器的~/.ssh/authorized_keys文件中。
+在本地服务器上使用ssh命令测试连接目标服务器，如果可以无密码登录，则表示互信已经实现。
+自动互信shell脚本
+
+
+#!/bin/bash
+
+# 配置用户名和密码
+username="username"
+password="password"
+
+# 配置服务器IP列表
+
+servers=(
+"10.0.0.1"
+"10.0.0.2"
+"10.0.0.3"
+)
+
+# 创建脚本日志文件
+log_file="$(dirname "$0")/script.log"
+echo "" > "$log_file"
+
+for server in "${servers[@]}"
+do
+  # 进行互信
+  sshpass -p "$password" ssh-copy-id -o StrictHostKeyChecking=no "$username@$server"
+
+  # 检查互信是否成功，并记录日志
+  if [ "$?" -eq "0" ]
+  then
+    echo "$(date +'%Y-%m-%d %H:%M:%S') - 互信成功 - $server" >> "$log_file"
+  else
+    echo "$(date +'%Y-%m-%d %H:%M:%S') - 互信失败 - $server" >> "$log_file"
+  fi
+done
