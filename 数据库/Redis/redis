@@ -1,0 +1,16 @@
+#### redis数据库编号
+
+索引为0的数据库，不显示索引号。
+
+![img](assets/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBA5Z2Q562J5aSV6Ziz6JC9dGltZQ==,size_19,color_FFFFFF,t_70,g_se,x_16.png)
+
+
+
+# redis清理缓存
+
+flushall：清空整个redis 服务器的数据(删除所有数据库的所有 key )。
+flushdb：清空当前数据库中的所有 key。
+
+#### 缓存雪崩、击穿、穿透
+
+![图片](https://cdn.xiaolincoding.com//mysql/other/061e2c04e0ebca3425dd75dd035b6b7b.png)
